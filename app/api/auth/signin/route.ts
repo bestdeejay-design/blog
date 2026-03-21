@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const user = getUserByUsername(username)
+    const user = await getUserByUsername(username)
 
     if (!user) {
       return NextResponse.json(

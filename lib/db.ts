@@ -1,6 +1,10 @@
 import { supabaseAdmin } from './supabase'
 import bcrypt from 'bcryptjs'
 
+export function verifyPassword(password: string, hash: string): boolean {
+  return bcrypt.compareSync(password, hash)
+}
+
 export async function getUserByUsername(username: string) {
   const { data, error } = await supabaseAdmin
     .from('user_profiles')
