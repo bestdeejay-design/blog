@@ -1,14 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Modal, StatCard } from './ui-components'
 
 export default function DashboardClient({ payload, initialChannels, initialUsers }: any) {
   const [activeTab, setActiveTab] = useState<'channels' | 'users'>('channels')
-  const [channels, setChannels] = useState(initialChannels)
-  const [users, setUsers] = useState(initialUsers)
+  const [channels, setChannels] = useState([])
+  const [users, setUsers] = useState([])
   const [showModal, setShowModal] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Hydration fix: wait for mount before rendering
+  useEffect(() => {
+    setMounted(true)
+    setChannels(initialChannels || [])
+    setUsers(initialUsers || [])
+  }, [initialChannels, initialUsers])
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="text-gray-600">Загрузка...</div>
+    </div>
+  }
 
   const handleSubmit = async (endpoint: string, formData: FormData, onSuccess: () => void) => {
     setLoading(true)
