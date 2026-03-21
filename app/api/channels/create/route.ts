@@ -6,17 +6,15 @@ export async function POST(request: Request) {
     const formData = await request.formData()
     const name = formData.get('name') as string
     const slug = formData.get('slug') as string
-    const url = formData.get('url') as string
-    const description = formData.get('description') as string
 
-    if (!name || !slug || !url) {
+    if (!name || !slug) {
       return NextResponse.json(
-        { error: 'Название, slug и URL обязательны' },
+        { error: 'Название и ключ обязательны' },
         { status: 400 }
       )
     }
 
-    const newChannel = createChannel(name, slug, url, description)
+    const newChannel = createChannel(name, slug, '', '')
 
     return NextResponse.json({ 
       success: true,

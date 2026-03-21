@@ -159,7 +159,7 @@ export default async function DashboardPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Slug (URL)
+                    Ключ (slug)
                   </label>
                   <input
                     type="text"
@@ -167,30 +167,10 @@ export default async function DashboardPage() {
                     required
                     pattern="[a-z0-9-]+"
                     title="Только lowercase буквы, цифры и дефисы"
+                    placeholder="main-news"
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white px-3 py-2 border"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    URL сайта
-                  </label>
-                  <input
-                    type="url"
-                    name="url"
-                    required
-                    placeholder="https://example.com"
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white px-3 py-2 border"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Описание
-                  </label>
-                  <textarea
-                    name="description"
-                    rows={3}
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white px-3 py-2 border"
-                  />
+                  <p className="text-xs text-gray-500 mt-1">По этому ключу новости будут транслироваться на сайте</p>
                 </div>
                 <button
                   type="submit"
