@@ -7,6 +7,8 @@ export async function POST(request: Request) {
     const name = formData.get('name') as string
     const slug = formData.get('slug') as string
 
+    console.log('Creating channel:', { name, slug })
+
     if (!name || !slug) {
       return NextResponse.json(
         { error: 'Название и ключ обязательны' },
@@ -16,7 +18,9 @@ export async function POST(request: Request) {
 
     // Создаем URL автоматически из slug
     const url = `https://${slug}.example.com`
-    const newChannel = createChannel(name, slug, url, '')
+    const newChannel = await createChannel(name, slug, url, '')
+
+    console.log('Channel created:', newChannel)
 
     return NextResponse.json({ 
       success: true,

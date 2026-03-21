@@ -6,12 +6,24 @@ export function verifyPassword(password: string, hash: string): boolean {
 }
 
 export async function getUserByUsername(username: string) {
-  // Try to get user by username from user_profiles
-  const { data, error } = await supabaseAdmin
+  // Try to get user by username OR email from user_profiles
+  let { data, error } = await supabaseAdmin
     .from('user_profiles')
     .select('*')
     .eq('username', username)
     .single()
+  
+  // If not found by username, try by email
+  if (!data || error) {
+    const result = await supabaseAdmin
+      .from('user_profiles')
+      .select('*')
+      .eq('email', username)
+      .single()
+    
+    data = result.data
+    error = result.error
+  }
   
   if (error) {
     console.error('Error fetching user:', error)
