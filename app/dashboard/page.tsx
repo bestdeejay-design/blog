@@ -29,7 +29,7 @@ export default async function DashboardPage() {
               </div>
               <div className="flex items-center">
                 <span className="text-gray-700 dark:text-gray-300 mr-4">
-                  {payload.username} ({payload.role})
+                  {String(payload.username)} ({String(payload.role)})
                 </span>
                 <form action="/api/auth/signout" method="POST">
                   <button
