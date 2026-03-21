@@ -57,7 +57,6 @@ export async function createChannel(name: string, slug: string, url: string, des
   const { data, error } = await supabaseAdmin
     .from('channels')
     .insert({
-      id: String(Date.now()),
       name,
       slug,
       url,

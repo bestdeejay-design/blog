@@ -157,16 +157,31 @@ export default async function DashboardPage() {
                 Создать канал
               </h2>
               <form
-                action="/api/channels/create"
-                method="POST"
-                className="space-y-4"
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault()
-                  const form = e.currentTarget
-                  setTimeout(() => {
-                    window.location.reload()
-                  }, 500)
+                  const formData = new FormData(e.currentTarget)
+                  
+                  try {
+                    const response = await fetch('/api/channels/create', {
+                      method: 'POST',
+                      body: formData
+                    })
+                    
+                    const result = await response.json()
+                    
+                    if (response.ok) {
+                      alert('Канал создан: ' + result.channel.name)
+                      e.currentTarget.reset()
+                      window.location.reload()
+                    } else {
+                      alert('Ошибка: ' + result.error)
+                    }
+                  } catch (error) {
+                    console.error('Error creating channel:', error)
+                    alert('Ошибка при создании канала')
+                  }
                 }}
+                className="space-y-4"
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
