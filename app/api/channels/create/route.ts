@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: Request) {
   try {
@@ -15,6 +15,8 @@ export async function POST(request: Request) {
     }
 
     const url = `https://${slug}.example.com`
+    
+    const supabaseAdmin = getSupabaseAdmin()
     
     // Сначала проверяем подключение
     const { data: testData, error: testError } = await supabaseAdmin
