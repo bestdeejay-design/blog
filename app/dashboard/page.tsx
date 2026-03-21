@@ -83,7 +83,17 @@ export default async function DashboardPage() {
                 <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
                   Создать пользователя
                 </h2>
-                <form action="/api/users/create" method="POST" className="space-y-4">
+                <form
+                  action="/api/users/create"
+                  method="POST"
+                  className="space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    setTimeout(() => {
+                      window.location.reload()
+                    }, 500)
+                  }}
+                >
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Логин
@@ -146,7 +156,18 @@ export default async function DashboardPage() {
               <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
                 Создать канал
               </h2>
-              <form action="/api/channels/create" method="POST" className="space-y-4">
+              <form
+                action="/api/channels/create"
+                method="POST"
+                className="space-y-4"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  const form = e.currentTarget
+                  setTimeout(() => {
+                    window.location.reload()
+                  }, 500)
+                }}
+              >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Название
