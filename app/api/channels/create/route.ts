@@ -16,8 +16,16 @@ export async function POST(request: Request) {
 
     const url = `https://${slug}.example.com`
     
-    // Просто вставляем и возвращаем данные
-    const { data, error } = await supabaseAdmin
+    // Сначала проверяем подключение
+    const { data: testData, error: testError } = await supabaseAdmin
+      .from('channels')
+      .select('*')
+      .limit(1)
+    
+    console.log('Test query result:', testData, testError)
+    
+    // Вставляем канал
+    const { data: channel, error } = await supabaseAdmin
       .from('channels')
       .insert({
         name,
@@ -29,9 +37,14 @@ export async function POST(request: Request) {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Insert error:', error)
+      throw error
+    }
 
-    return NextResponse.json({ success: true, channel: data })
+    console.log('Channel created:', channel)
+
+    return NextResponse.json({ success: true, channel: channel })
   } catch (error: any) {
     console.error('Create channel error:', error)
     return NextResponse.json(
