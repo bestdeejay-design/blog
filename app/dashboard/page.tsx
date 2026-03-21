@@ -203,6 +203,82 @@ export default async function DashboardPage() {
               </form>
             </div>
 
+            {/* Создание новости */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+                Создать новость
+              </h2>
+              <form
+                action="/api/news/create"
+                method="POST"
+                className="space-y-4"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  setTimeout(() => {
+                    window.location.reload()
+                  }, 500)
+                }}
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Заголовок
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    required
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Текст новости
+                  </label>
+                  <textarea
+                    name="content"
+                    rows={4}
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Канал
+                  </label>
+                  <select
+                    name="channel_id"
+                    required
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                  >
+                    <option value="">Выберите канал</option>
+                    {channels.map((channel: any) => (
+                      <option key={channel.id} value={channel.id}>
+                        {channel.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Статус
+                  </label>
+                  <select
+                    name="status"
+                    defaultValue="draft"
+                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                  >
+                    <option value="draft">Черновик</option>
+                    <option value="published">Опубликовано</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"
+                >
+                  Создать новость
+                </button>
+              </form>
+            </div>
+
             {/* Списки */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Пользователи */}
