@@ -18,6 +18,8 @@ export async function POST(request: Request) {
 
     const user = await getUserByUsername(username)
 
+    console.log('User found:', user ? { id: user.id, username: user.username, hasPassword: !!user.password } : 'null')
+
     if (!user) {
       return NextResponse.json(
         { error: 'Неверный логин или пароль' },
@@ -25,7 +27,11 @@ export async function POST(request: Request) {
       )
     }
 
+    console.log('Verifying password for user:', user.username)
+
     const isValid = verifyPassword(password, user.password)
+
+    console.log('Password valid:', isValid)
 
     if (!isValid) {
       return NextResponse.json(
