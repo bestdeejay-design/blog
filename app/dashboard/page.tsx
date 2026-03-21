@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { jwtVerify } from 'jose'
-import { readDb } from '@/lib/db'
+import { getChannels, getUsers } from '@/lib/db'
 
 const SECRET = new TextEncoder().encode('your-secret-key-change-this-in-production')
 
@@ -15,7 +15,8 @@ export default async function DashboardPage() {
 
   try {
     const { payload } = await jwtVerify(token.value, SECRET)
-    const db = readDb()
+    const channels = await getChannels()
+    const users = await getUsers()
 
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -53,7 +54,7 @@ export default async function DashboardPage() {
                   Пользователи
                 </h3>
                 <p className="text-3xl font-bold text-indigo-600">
-                  {db.users.length}
+                  {users.length}
                 </p>
               </div>
 
@@ -62,7 +63,7 @@ export default async function DashboardPage() {
                   Каналы
                 </h3>
                 <p className="text-3xl font-bold text-green-600">
-                  {db.channels.length}
+                  {channels.length}
                 </p>
               </div>
 
@@ -71,7 +72,7 @@ export default async function DashboardPage() {
                   Новости
                 </h3>
                 <p className="text-3xl font-bold text-blue-600">
-                  {db.news.length}
+                  0
                 </p>
               </div>
             </div>
@@ -189,7 +190,7 @@ export default async function DashboardPage() {
                   Пользователи
                 </h3>
                 <ul className="space-y-2">
-                  {db.users.map((user: any) => (
+                  {users.map((user: any) => (
                     <li key={user.id} className="flex justify-between items-center">
                       <span className="text-gray-700 dark:text-gray-300">
                         {user.full_name} (@{user.username})
@@ -208,7 +209,7 @@ export default async function DashboardPage() {
                   Каналы
                 </h3>
                 <ul className="space-y-2">
-                  {db.channels.map((channel: any) => (
+                  {channels.map((channel: any) => (
                     <li key={channel.id} className="flex justify-between items-center">
                       <div>
                         <span className="text-gray-900 dark:text-white font-medium">

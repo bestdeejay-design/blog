@@ -1,104 +1,71 @@
-import fs from 'fs'
-import path from 'path'
+import { supabaseAdmin } from './supabase'
 import bcrypt from 'bcryptjs'
 
-const DB_PATH = path.join(process.cwd(), 'data', 'database.json')
-
-export function readDb() {
-  const data = fs.readFileSync(DB_PATH, 'utf8')
-  return JSON.parse(data)
+export async function getUserByUsername(username: string) {
+  const { data, error } = await supabaseAdmin
+    .from('user_profiles')
+    .select('*')
+    .eq('username', username)
+    .single()
+  
+  if (error) return null
+  return data
 }
 
-export function writeDb(data: any) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2))
+export async function createUser(username: string, password: string, role: string, full_name: string) {
+  const hashedPassword = bcrypt.hashSync(password, 10)
+  
+  const { data, error } = await supabaseAdmin
+    .from('user_profiles')
+    .insert({
+      id: String(Date.now()),
+      username,
+      password: hashedPassword,
+      role,
+      full_name,
+      is_active: true
+    })
+    .select()
+    .single()
+  
+  if (error) throw error
+  return data
 }
 
-export function verifyPassword(password: string, hash: string): boolean {
-  return bcrypt.compareSync(password, hash)
+export async function createChannel(name: string, slug: string, url: string, description?: string) {
+  const { data, error } = await supabaseAdmin
+    .from('channels')
+    .insert({
+      id: String(Date.now()),
+      name,
+      slug,
+      url,
+      description: description || '',
+      is_active: true
+    })
+    .select()
+    .single()
+  
+  if (error) throw error
+  return data
 }
 
-export function hashPassword(password: string): string {
-  return bcrypt.hashSync(password, 10)
+export async function getChannels() {
+  const { data, error } = await supabaseAdmin
+    .from('channels')
+    .select('*')
+    .order('name')
+  
+  if (error) return []
+  return data
 }
 
-export function getUserByUsername(username: string) {
-  const db = readDb()
-  return db.users.find((u: any) => u.username === username)
-}
-
-export function createUser(username: string, password: string, role: string, full_name: string) {
-  const db = readDb()
+export async function getUsers() {
+  const { data, error } = await supabaseAdmin
+    .from('user_profiles')
+    .select('*')
+    .order('created_at', { ascending: false })
   
-  const newUser = {
-    id: String(Date.now()),
-    username,
-    password: hashPassword(password),
-    role,
-    full_name
-  }
-  
-  db.users.push(newUser)
-  writeDb(db)
-  
-  return newUser
-}
-
-export function createChannel(name: string, slug: string, url: string, description?: string) {
-  const db = readDb()
-  
-  // Check if slug already exists
-  const exists = db.channels.some((c: any) => c.slug === slug)
-  if (exists) {
-    throw new Error('Канал с таким ключом уже существует')
-  }
-  
-  const newChannel = {
-    id: String(Date.now()),
-    name,
-    slug,
-    url: url || `https://${slug}.example.com`,
-    description: description || '',
-    is_active: true,
-    created_at: new Date().toISOString()
-  }
-  
-  db.channels.push(newChannel)
-  writeDb(db)
-  
-  return newChannel
-}
-
-export function assignEditorToChannel(userId: string, channelId: string) {
-  const db = readDb()
-  
-  const assignment = {
-    id: String(Date.now()),
-    user_id: userId,
-    channel_id: channelId,
-    created_at: new Date().toISOString()
-  }
-  
-  db.channel_editors.push(assignment)
-  writeDb(db)
-  
-  return assignment
-}
-
-export function createNews(title: string, content: string, channelId: string, status = 'draft') {
-  const db = readDb()
-  
-  const newNews = {
-    id: String(Date.now()),
-    title,
-    content,
-    channel_id: channelId,
-    status,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-  
-  db.news.push(newNews)
-  writeDb(db)
-  
-  return newNews
+  if (error) return []
+  return data
 }
