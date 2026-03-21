@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-
 // Modal Component
 export function Modal({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) {
   return (
