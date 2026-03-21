@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase'
+import { getSupabaseAdmin } from './supabase'
 import bcrypt from 'bcryptjs'
 
 export function verifyPassword(password: string, hash: string): boolean {
@@ -6,6 +6,8 @@ export function verifyPassword(password: string, hash: string): boolean {
 }
 
 export async function getUserByUsername(username: string) {
+  const supabaseAdmin = getSupabaseAdmin()
+  
   // Try to get user by username OR email from user_profiles
   let { data, error } = await supabaseAdmin
     .from('user_profiles')
@@ -34,6 +36,7 @@ export async function getUserByUsername(username: string) {
 }
 
 export async function createUser(username: string, password: string, role: string, full_name: string) {
+  const supabaseAdmin = getSupabaseAdmin()
   const hashedPassword = bcrypt.hashSync(password, 10)
   
   const { data, error } = await supabaseAdmin
@@ -54,6 +57,8 @@ export async function createUser(username: string, password: string, role: strin
 }
 
 export async function createChannel(name: string, slug: string, url: string, description?: string) {
+  const supabaseAdmin = getSupabaseAdmin()
+  
   const { data, error } = await supabaseAdmin
     .from('channels')
     .insert({
@@ -71,6 +76,8 @@ export async function createChannel(name: string, slug: string, url: string, des
 }
 
 export async function getChannels() {
+  const supabaseAdmin = getSupabaseAdmin()
+  
   const { data, error } = await supabaseAdmin
     .from('channels')
     .select('*')
@@ -81,6 +88,8 @@ export async function getChannels() {
 }
 
 export async function getUsers() {
+  const supabaseAdmin = getSupabaseAdmin()
+  
   const { data, error } = await supabaseAdmin
     .from('user_profiles')
     .select('*')
