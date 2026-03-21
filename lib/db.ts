@@ -46,11 +46,17 @@ export function createUser(username: string, password: string, role: string, ful
 export function createChannel(name: string, slug: string, url: string, description?: string) {
   const db = readDb()
   
+  // Check if slug already exists
+  const exists = db.channels.some((c: any) => c.slug === slug)
+  if (exists) {
+    throw new Error('Канал с таким ключом уже существует')
+  }
+  
   const newChannel = {
     id: String(Date.now()),
     name,
     slug,
-    url,
+    url: url || `https://${slug}.example.com`,
     description: description || '',
     is_active: true,
     created_at: new Date().toISOString()

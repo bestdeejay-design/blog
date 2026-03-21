@@ -14,16 +14,18 @@ export async function POST(request: Request) {
       )
     }
 
-    const newChannel = createChannel(name, slug, '', '')
+    // Создаем URL автоматически из slug
+    const url = `https://${slug}.example.com`
+    const newChannel = createChannel(name, slug, url, '')
 
     return NextResponse.json({ 
       success: true,
       channel: newChannel
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create channel error:', error)
     return NextResponse.json(
-      { error: 'Ошибка при создании канала' },
+      { error: error.message || 'Ошибка при создании канала' },
       { status: 500 }
     )
   }
