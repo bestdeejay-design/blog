@@ -1,0 +1,14 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "admin",
+      "password": "$2a$10$rE3vZb7X9kFqPzH8wN2jL.dYvK5mT6pQ8sR4uW1xY0zA2bC3dE4fG",
+      "role": "super_admin",
+      "full_name": "Администратор"
+    }
+  ],
+  "channels": [],
+  "channel_editors": [],
+  "news": []
+}
