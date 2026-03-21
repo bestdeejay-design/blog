@@ -8,7 +8,31 @@
 npm install
 ```
 
-### 2. Запуск локально
+### 2. Настройка Supabase
+
+1. Откройте https://supabase.com/dashboard/project/mtxhzvxetxcppzwgrrsu
+2. Перейдите в SQL Editor
+3. Выполните SQL для создания таблиц (если еще не созданы):
+
+```sql
+-- Добавим поле username в user_profiles если его нет
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS username TEXT;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS password TEXT;
+```
+
+### 3. Настройка переменных окружения
+
+Скопируйте `.env.local.example` в `.env.local`:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Заполните `.env.local`:
+- `NEXT_PUBLIC_SUPABASE_URL` - ваш URL из Supabase
+- `SUPABASE_SERVICE_ROLE_KEY` - ваш Service Role ключ из Supabase
+
+### 4. Запуск локально
 
 ```bash
 npm run dev
@@ -16,7 +40,7 @@ npm run dev
 
 Сайт доступен: http://localhost:3000
 
-### 3. Вход в систему
+### 5. Вход в систему
 
 **Первый супер-админ:**
 - Логин: `admin`
@@ -24,18 +48,14 @@ npm run dev
 
 ---
 
-## 📁 Структура данных
+## 📊 База данных
 
-Все данные хранятся в файле `data/database.json`:
+Все данные хранятся в **Supabase PostgreSQL**:
 
-```json
-{
-  "users": [...],        // Пользователи
-  "channels": [...],     // Каналы
-  "channel_editors": [], // Привязки редакторов к каналам
-  "news": [...]          // Новости
-}
-```
+- ✅ **users** (user_profiles) - пользователи
+- ✅ **channels** - каналы
+- ✅ **channel_editors** - привязки редакторов
+- ✅ **news** - новости (будет добавлено)
 
 ---
 
@@ -43,7 +63,7 @@ npm run dev
 
 ### 1️⃣ Войти в админку
 
-1. Откройте https://y-phi-black.vercel.app/login
+1. Откройте https://blog-three-opal-85.vercel.app/login
 2. Введите логин/пароль
 3. Попадаете в дашборд
 
@@ -60,22 +80,8 @@ npm run dev
 ### 3️⃣ Создать канал
 
 1. В дашборде форма "Создать канал"
-2. Заполните:
-   - Название
-   - Slug (URL, например `main-news`)
-   - URL сайта (https://...)
-   - Описание (необязательно)
+2. Название и ключ (slug)
 3. Нажмите "Создать канал"
-
-### 4️⃣ Редактировать данные напрямую в GitHub
-
-Можно править `data/database.json` прямо в браузере:
-
-1. GitHub → ваш репозиторий
-2. Файл `data/database.json`
-3. Кнопка ✏️ Edit
-4. Правьте JSON
-5. Commit changes
 
 ---
 
@@ -90,6 +96,10 @@ git push
 ```
 
 Vercel сам обновит сайт.
+
+**ВАЖНО:** Добавьте переменные окружения в Vercel:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
 ---
 
@@ -117,6 +127,7 @@ Vercel сам обновит сайт.
 - Пароли хешируются через bcrypt
 - JWT токены для сессий (24 часа)
 - HttpOnly cookies
+- Supabase RLS (настраивается отдельно)
 
 ---
 
@@ -126,4 +137,6 @@ Vercel сам обновит сайт.
 2. ✅ Создание пользователей работает
 3. ✅ Создание каналов работает
 4. ⏳ Добавление новостей (следующий шаг)
-5. ⏳ Вывод новостей на сайтах (будет позже)
+5. ⏳ Редактирование новостей
+6. ⏳ Публикация/скрытие
+7. ⏳ Вывод новостей на сайтах
