@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS news_channels (
   UNIQUE(news_id, channel_id)
 );
 
--- Create indexes for better performance
+-- Create indexes for better performance (if not exists)
 CREATE INDEX IF NOT EXISTS idx_news_status ON news(status);
 CREATE INDEX IF NOT EXISTS idx_news_published_at ON news(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_news_channel_id ON news(channel_id);
@@ -82,6 +82,17 @@ ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news ENABLE ROW LEVEL SECURITY;
 ALTER TABLE news_channels ENABLE ROW LEVEL SECURITY;
 ALTER TABLE channel_editors ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist (to allow re-running migration)
+DROP POLICY IF EXISTS "Public read access for active channels" ON channels;
+DROP POLICY IF EXISTS "Public read access for user profiles" ON user_profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
+DROP POLICY IF EXISTS "Public read published news" ON news;
+DROP POLICY IF EXISTS "Authenticated users can read all news" ON news;
+DROP POLICY IF EXISTS "Authenticated users can create news" ON news;
+DROP POLICY IF EXISTS "Authenticated users can update news" ON news;
+DROP POLICY IF EXISTS "Public read news_channels" ON news_channels;
+DROP POLICY IF EXISTS "Authenticated users can read channel_editors" ON channel_editors;
 
 -- Policies for channels (public read for active channels)
 CREATE POLICY "Public read access for active channels"
@@ -98,31 +109,37 @@ CREATE POLICY "Users can update own profile"
   USING (auth.uid() = id);
 
 -- Policies for news (authenticated users can read drafts, public can read published)
+DROP POLICY IF EXISTS "Public read published news" ON news;
 CREATE POLICY "Public read published news"
   ON news FOR SELECT
   USING (status = 'published');
 
+DROP POLICY IF EXISTS "Authenticated users can read all news" ON news;
 CREATE POLICY "Authenticated users can read all news"
   ON news FOR SELECT
   TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create news" ON news;
 CREATE POLICY "Authenticated users can create news"
   ON news FOR INSERT
   TO authenticated
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update news" ON news;
 CREATE POLICY "Authenticated users can update news"
   ON news FOR UPDATE
   TO authenticated
   USING (true);
 
 -- Policies for news_channels (public read)
+DROP POLICY IF EXISTS "Public read news_channels" ON news_channels;
 CREATE POLICY "Public read news_channels"
   ON news_channels FOR SELECT
   USING (true);
 
 -- Policies for channel_editors (authenticated users can read)
+DROP POLICY IF EXISTS "Authenticated users can read channel_editors" ON channel_editors;
 CREATE POLICY "Authenticated users can read channel_editors"
   ON channel_editors FOR SELECT
   TO authenticated
@@ -137,12 +154,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Triggers to auto-update updated_at
-CREATE TRIGGER update_channels_updated_at BEFORE UPDATE ON channels
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Triggers to auto-update updated_at (create if not exists)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_channels_updated_at'
+    ) THEN
+        CREATE TRIGGER update_channels_updated_at BEFORE UPDATE ON channels
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
-CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_user_profiles_updated_at'
+    ) THEN
+        CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
-CREATE TRIGGER update_news_updated_at BEFORE UPDATE ON news
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'update_news_updated_at'
+    ) THEN
+        CREATE TRIGGER update_news_updated_at BEFORE UPDATE ON news
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
