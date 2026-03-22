@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS channel_editors (
 CREATE TABLE IF NOT EXISTS news (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   channel_id UUID REFERENCES channels(id) ON DELETE SET NULL,
-  author_id UUID REFERENCES user_profiles(id) ON DELETE SET NULL,
+  author_id UUID REFERENCES user_profiles(id), -- NULL разрешен (необязательное поле)
   title VARCHAR(500) NOT NULL,
   slug VARCHAR(500),
   content TEXT NOT NULL,
