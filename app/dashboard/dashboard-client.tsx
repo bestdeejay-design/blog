@@ -7,6 +7,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   const [activeTab, setActiveTab] = useState<'news' | 'channels' | 'users'>('news')
   const [channels, setChannels] = useState([])
   const [users, setUsers] = useState([])
+  const [news, setNews] = useState([])
   const [showModal, setShowModal] = useState<string | null>(null)
   const [editingUser, setEditingUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -19,7 +20,25 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
     setMounted(true)
     setChannels(initialChannels || [])
     setUsers(initialUsers || [])
+    // Load news on mount
+    loadNews()
   }, [initialChannels, initialUsers])
+
+  const loadNews = async () => {
+    try {
+      console.log('Loading news...')
+      const response = await fetch('/api/news')
+      const result = await response.json()
+      if (response.ok) {
+        setNews(result.news || [])
+        console.log(`✅ Loaded ${result.news?.length || 0} news items`)
+      } else {
+        console.error('Failed to load news:', result.error)
+      }
+    } catch (error) {
+      console.error('Error loading news:', error)
+    }
+  }
 
   if (!mounted) {
     return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -153,9 +172,53 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               </button>
             </div>
             
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 text-center">
-              <p className="text-gray-500 mb-4">📝 Список новостей будет здесь</p>
-              <p className="text-sm text-gray-400">Функционал просмотра и управления новостями в разработке</p>
+            <div className="grid gap-4">
+              {news.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Новостей пока нет</p>
+              ) : (
+                news.map((item: any) => (
+                  <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            item.status === 'published' ? 'bg-green-100 text-green-800' :
+                            item.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {item.status === 'published' ? '✅ Опубликовано' :
+                             item.status === 'draft' ? '✏️ Черновик' : item.status}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            📺 {item.channels?.name || 'Не указан'}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                          {item.title}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                          {item.excerpt || item.content?.substring(0, 200) + '...'}
+                        </p>
+                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                          <span>👤 {item.user_profiles?.full_name || item.user_profiles?.username || 'Неизвестно'}</span>
+                          <span>📅 {new Date(item.created_at).toLocaleDateString('ru-RU')}</span>
+                          {item.published_at && (
+                            <span>🚀 Опубликован {new Date(item.published_at).toLocaleDateString('ru-RU')}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button className="text-blue-600 hover:text-blue-700 p-2">
+                          ✏️
+                        </button>
+                        <button className="text-red-600 hover:text-red-700 p-2">
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
