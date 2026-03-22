@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { Modal, StatCard } from './ui-components'
 
 export default function DashboardClient({ payload, initialChannels, initialUsers }: any) {
-  const [activeTab, setActiveTab] = useState<'channels' | 'users'>('channels')
+  const [activeTab, setActiveTab] = useState<'news' | 'channels' | 'users'>('news')
   const [channels, setChannels] = useState([])
   const [users, setUsers] = useState([])
   const [showModal, setShowModal] = useState<string | null>(null)
+  const [editingUser, setEditingUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -24,12 +25,13 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
     </div>
   }
 
-  const handleSubmit = async (endpoint: string, formData: FormData, onSuccess: () => void) => {
+  const handleSubmit = async (endpoint: string, formData: FormData | any, onSuccess: () => void) => {
     setLoading(true)
     try {
       const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData
+        method: formData instanceof FormData ? 'POST' : 'PUT',
+        body: formData instanceof FormData ? formData : JSON.stringify(formData),
+        headers: formData instanceof FormData ? {} : { 'Content-Type': 'application/json' }
       })
       
       const result = await response.json()
@@ -38,13 +40,14 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
         alert('✅ Успешно!')
         onSuccess()
         setShowModal(null)
+        setEditingUser(null)
         window.location.reload()
       } else {
         alert('❌ Ошибка: ' + result.error)
       }
     } catch (error) {
       console.error('Error:', error)
-      alert('❌ Ошибка при создании')
+      alert('❌ Ошибка при сохранении')
     } finally {
       setLoading(false)
     }
@@ -59,6 +62,16 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             <div className="flex items-center space-x-8">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📊 Админ-панель</h1>
               <div className="flex space-x-4">
+                <button
+                  onClick={() => setActiveTab('news')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeTab === 'news'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  📰 Новости
+                </button>
                 <button
                   onClick={() => setActiveTab('channels')}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
@@ -101,6 +114,26 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
           <StatCard title="Пользователи" count={users.length} color="purple" icon="👥" />
           <StatCard title="Активность" count={channels.length + users.length} color="indigo" icon="⚡" />
         </div>
+
+        {/* News Tab */}
+        {activeTab === 'news' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">📰 Новости</h2>
+              <button
+                onClick={() => setShowModal('news')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2"
+              >
+                <span>➕</span><span>Добавить новость</span>
+              </button>
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-8 text-center">
+              <p className="text-gray-500 mb-4">📝 Список новостей будет здесь</p>
+              <p className="text-sm text-gray-400">Функционал просмотра и управления новостями в разработке</p>
+            </div>
+          </div>
+        )}
 
         {/* Channels Tab */}
         {activeTab === 'channels' && (
@@ -185,9 +218,22 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                       }`}>
                         {user.role === 'super_admin' ? '👑 Супер-админ' : user.role === 'admin' ? '⭐ Админ' : '✏️ Редактор'}
                       </span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        {payload.role === 'super_admin' && (
+                          <button
+                            onClick={() => {
+                              setEditingUser(user)
+                              setShowModal('edit-user')
+                            }}
+                            className="text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            ✏️
+                          </button>
+                        )}
+                        <span className="text-sm text-gray-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -198,6 +244,43 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
       </main>
 
       {/* Modals */}
+      {showModal === 'news' && (
+        <Modal title="📰 Создать новость" onClose={() => setShowModal(null)}>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const fd = new FormData(e.currentTarget)
+            handleSubmit('/api/news/create', fd, () => {})
+          }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Заголовок</label>
+              <input type="text" name="title" required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Введите заголовок" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Текст новости</label>
+              <textarea name="content" rows={4} required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Введите текст" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Канал</label>
+              <select name="channel_id" required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                <option value="">Выберите канал</option>
+                {channels.map((channel: any) => (
+                  <option key={channel.id} value={channel.id}>{channel.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Статус</label>
+              <select name="status" defaultValue="draft" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                <option value="draft">Черновик</option>
+                <option value="published">Опубликовано</option>
+              </select>
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
+              {loading ? '⏳ Создание...' : '✅ Создать новость'}
+            </button>
+          </form>
+        </Modal>
+      )}
       {showModal === 'channel' && (
         <Modal title="📺 Создать канал" onClose={() => setShowModal(null)}>
           <form onSubmit={(e) => {
@@ -248,6 +331,49 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             </div>
             <button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
               {loading ? '⏳ Создание...' : '✅ Создать пользователя'}
+            </button>
+          </form>
+        </Modal>
+      )}
+      {showModal === 'edit-user' && editingUser && payload.role === 'super_admin' && (
+        <Modal title="✏️ Редактировать пользователя" onClose={() => {
+          setShowModal(null)
+          setEditingUser(null)
+        }}>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const fd = new FormData(e.currentTarget)
+            const data = {
+              userId: editingUser.id,
+              username: fd.get('username') as string,
+              full_name: fd.get('full_name') as string,
+              role: fd.get('role') as string,
+              password: fd.get('password') as string || undefined
+            }
+            handleSubmit('/api/users/update', data, () => {})
+          }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Логин</label>
+              <input type="text" name="username" defaultValue={editingUser.username} required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Пароль</label>
+              <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Имя</label>
+              <input type="text" name="full_name" defaultValue={editingUser.full_name || ''} className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Роль</label>
+              <select name="role" defaultValue={editingUser.role} className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                <option value="editor">Редактор</option>
+                <option value="admin">Админ</option>
+                <option value="super_admin">Супер-админ</option>
+              </select>
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
+              {loading ? '⏳ Сохранение...' : '💾 Сохранить изменения'}
             </button>
           </form>
         </Modal>
