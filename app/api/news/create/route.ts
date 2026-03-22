@@ -29,6 +29,8 @@ export async function POST(request: Request) {
       const cookieStore = await cookies()
       const token = cookieStore.get('auth-token')
       
+      console.log('🍪 Cookie auth-token:', token ? 'found' : 'not found')
+      
       if (!token) {
         console.error('❌ No auth token found')
         return NextResponse.json(
@@ -37,18 +39,26 @@ export async function POST(request: Request) {
         )
       }
       
+      // JWT токен уже содержит данные, нам нужно просто получить их из cookies
+      // Для простой проверки - пробуем декодировать JWT вручную
+      // JWT формат: header.payload.signature (base64url)
       try {
-        const payload = Buffer.from(token.value, 'base64').toString('utf-8')
-        const decoded = JSON.parse(payload)
-        authorId = decoded.userId
-        console.log('✅ Author ID:', authorId)
-      } catch (e) {
-        console.error('❌ Failed to decode token:', e)
-        return NextResponse.json(
-          { error: 'Неверный токен авторизации' },
-          { status: 401 }
-        )
+        const parts = token.value.split('.')
+        if (parts.length === 3) {
+          const payload = parts[1]
+          // Добавляем padding для base64
+          const padded = payload + '='.repeat((4 - payload.length % 4) % 4)
+          const decoded = Buffer.from(padded, 'base64').toString('utf-8')
+          const parsed = JSON.parse(decoded)
+          authorId = parsed.userId
+          console.log('✅ Decoded JWT payload:', { userId: authorId })
+        } else {
+          console.error('❌ Invalid JWT format')
+        }
+      } catch (decodeError) {
+        console.error('❌ Failed to decode JWT:', decodeError)
       }
+      
     } catch (error) {
       console.error('❌ Error reading cookies:', error)
       return NextResponse.json(
