@@ -201,7 +201,6 @@
           });
           
           const channelName = news.channels?.name || 'Без канала';
-          const authorName = news.user_profiles?.full_name || news.user_profiles?.username;
           const excerpt = news.excerpt || (news.content ? news.content.substring(0, 200) + '...' : '');
           
           return `
@@ -211,7 +210,6 @@
               <div class="news-meta">
                 <span class="news-channel">📺 ${escapeHtml(channelName)}</span>
                 <span class="news-date">📅 ${date}</span>
-                ${authorName ? `<span class="news-author">✍️ ${escapeHtml(authorName)}</span>` : ''}
               </div>
             </div>
           `;

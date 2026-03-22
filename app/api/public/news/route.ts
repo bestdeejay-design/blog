@@ -24,11 +24,6 @@ export async function GET(request: Request) {
           name,
           slug,
           url
-        ),
-        user_profiles (
-          id,
-          username,
-          full_name
         )
       `)
       .eq('status', 'published') // Только опубликованные!
