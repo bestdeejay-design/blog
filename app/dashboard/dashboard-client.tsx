@@ -11,6 +11,8 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   const [editingUser, setEditingUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [errorModal, setErrorModal] = useState<{show: boolean, message: string, details?: string}>({ show: false, message: '', details: '' })
+  const [successModal, setSuccessModal] = useState<{show: boolean, message: string}>({ show: false, message: '' })
 
   // Hydration fix: wait for mount before rendering
   useEffect(() => {
@@ -28,6 +30,9 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   const handleSubmit = async (endpoint: string, formData: FormData | any, onSuccess: () => void) => {
     setLoading(true)
     try {
+      console.log('🚀 Submit to:', endpoint)
+      console.log('📦 Data:', formData instanceof FormData ? Object.fromEntries(formData) : formData)
+      
       const response = await fetch(endpoint, {
         method: formData instanceof FormData ? 'POST' : 'PUT',
         body: formData instanceof FormData ? formData : JSON.stringify(formData),
@@ -35,19 +40,39 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
       })
       
       const result = await response.json()
+      console.log('📥 Response:', response.status, result)
       
       if (response.ok) {
-        alert('✅ Успешно!')
+        console.log('✅ Success!')
+        setSuccessModal({ show: true, message: '✅ Успешно!' })
         onSuccess()
         setShowModal(null)
         setEditingUser(null)
-        window.location.reload()
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
       } else {
-        alert('❌ Ошибка: ' + result.error)
+        console.error('❌ Error:', result)
+        const errorMessage = result.error || result.message || 'Неизвестная ошибка'
+        // Показываем модальное окно с ошибкой вместо alert
+        setErrorModal({
+          show: true,
+          message: errorMessage,
+          details: JSON.stringify(result, null, 2)
+        })
       }
-    } catch (error) {
-      console.error('Error:', error)
-      alert('❌ Ошибка при сохранении')
+    } catch (error: any) {
+      console.error('💥 Exception:', error)
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      })
+      setErrorModal({
+        show: true,
+        message: `Ошибка: ${error.message}`,
+        details: error.stack
+      })
     } finally {
       setLoading(false)
     }
@@ -376,6 +401,64 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               {loading ? '⏳ Сохранение...' : '💾 Сохранить изменения'}
             </button>
           </form>
+        </Modal>
+      )}
+
+      {/* Error Modal */}
+      {errorModal.show && (
+        <Modal 
+          title="❌ Ошибка" 
+          onClose={() => setErrorModal({ show: false, message: '', details: '' })}
+        >
+          <div className="space-y-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <p className="text-red-800 dark:text-red-200 font-medium">{errorModal.message}</p>
+            </div>
+            
+            {errorModal.details && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  📋 Детали ошибки (скопируйте для отладки):
+                </label>
+                <textarea
+                  readOnly
+                  value={errorModal.details}
+                  className="w-full h-40 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 font-mono text-xs text-gray-800 dark:text-gray-200 focus:outline-none"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(errorModal.details || '')
+                    setSuccessModal({ show: true, message: '✅ Скопировано!' })
+                  }}
+                  className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+                >
+                  <span>📋</span><span>Копировать</span>
+                </button>
+              </div>
+            )}
+            
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={() => setErrorModal({ show: false, message: '', details: '' })}
+                className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-all"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Success Modal */}
+      {successModal.show && (
+        <Modal 
+          title="✅ Успешно" 
+          onClose={() => setSuccessModal({ show: false, message: '' })}
+        >
+          <div className="py-4">
+            <p className="text-green-800 dark:text-green-200 text-center">{successModal.message}</p>
+          </div>
         </Modal>
       )}
     </div>
