@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const channelSlug = searchParams.get('channel') // фильтр по каналу
     const limit = parseInt(searchParams.get('limit') || '10')
     
-    console.log('📢 Public API - Fetching news:', { channelSlug, limit })
+    console.log('📢 Public API v2 - Fetching news:', { channelSlug, limit })
     
     const supabasePublic = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
