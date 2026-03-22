@@ -1,8 +1,9 @@
 -- Исправление ограничения author_id в таблице news
 -- Выполните этот SQL в Supabase Dashboard → SQL Editor
 
--- Удаляем NOT NULL constraint из author_id
-ALTER TABLE news ALTER COLUMN author_id DROP NOT NULL;
+-- ВОЗВРАЩАЕМ NOT NULL constraint для author_id
+-- Это правильное поведение - мы должны знать кто создал новость!
+ALTER TABLE news ALTER COLUMN author_id SET NOT NULL;
 
 -- Проверяем результат
 SELECT 
@@ -12,3 +13,6 @@ SELECT
 FROM information_schema.columns 
 WHERE table_name = 'news' 
   AND column_name = 'author_id';
+
+-- Сообщение:
+-- is_nullable = 'NO' означает что поле обязательное (правильно!)

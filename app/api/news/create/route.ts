@@ -22,23 +22,47 @@ export async function POST(request: Request) {
 
     const supabaseAdmin = getSupabaseAdmin()
     
-    // Get current user from cookies if available
-    const cookieStore = await import('next/headers')
-      .then(mod => mod.cookies())
-      .catch(() => null)
-    
-    let authorId = null
-    if (cookieStore) {
-      const token = await cookieStore.get('auth-token')
-      if (token) {
-        try {
-          const payload = Buffer.from(token.value, 'base64').toString('utf-8')
-          const decoded = JSON.parse(payload)
-          authorId = decoded.userId
-        } catch (e) {
-          console.warn('Could not decode auth token')
-        }
+    // Get current user from cookies - REQUIRED!
+    let authorId: string | null = null
+    try {
+      const { cookies } = await import('next/headers')
+      const cookieStore = await cookies()
+      const token = cookieStore.get('auth-token')
+      
+      if (!token) {
+        console.error('❌ No auth token found')
+        return NextResponse.json(
+          { error: 'Требуется авторизация' },
+          { status: 401 }
+        )
       }
+      
+      try {
+        const payload = Buffer.from(token.value, 'base64').toString('utf-8')
+        const decoded = JSON.parse(payload)
+        authorId = decoded.userId
+        console.log('✅ Author ID:', authorId)
+      } catch (e) {
+        console.error('❌ Failed to decode token:', e)
+        return NextResponse.json(
+          { error: 'Неверный токен авторизации' },
+          { status: 401 }
+        )
+      }
+    } catch (error) {
+      console.error('❌ Error reading cookies:', error)
+      return NextResponse.json(
+        { error: 'Ошибка чтения токена' },
+        { status: 500 }
+      )
+    }
+    
+    if (!authorId) {
+      console.error('❌ Author ID is required but not found')
+      return NextResponse.json(
+        { error: 'Не удалось определить автора' },
+        { status: 401 }
+      )
     }
     
     const insertData: any = {
@@ -46,13 +70,10 @@ export async function POST(request: Request) {
       title,
       content: content || '',
       channel_id: channelId,
+      author_id: authorId, // ALWAYS set author_id
       status,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
-    }
-    
-    if (authorId) {
-      insertData.author_id = authorId
     }
     
     console.log('Inserting into database:', insertData)
