@@ -20,6 +20,21 @@ export async function POST(request: Request) {
       )
     }
 
+    // Генерируем slug из заголовка (если не передан)
+    let slug = formData.get('slug') as string | null
+    if (!slug) {
+      // Транслитерация и создание slug из заголовка
+      slug = title.toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim()
+        .substring(0, 100)
+      
+      // Добавляем timestamp для уникальности
+      slug = slug + '-' + Date.now()
+    }
+
     const supabaseAdmin = getSupabaseAdmin()
     
     // Get current user from cookies - REQUIRED!
@@ -78,6 +93,7 @@ export async function POST(request: Request) {
     const insertData: any = {
       id: crypto.randomUUID(),
       title,
+      slug, // Добавляем slug
       content: content || '',
       channel_id: channelId,
       author_id: authorId, // ALWAYS set author_id
