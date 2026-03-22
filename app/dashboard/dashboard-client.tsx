@@ -4,16 +4,21 @@ import { useState, useEffect } from 'react'
 import { Modal, StatCard } from './ui-components'
 
 export default function DashboardClient({ payload, initialChannels, initialUsers }: any) {
-  const [activeTab, setActiveTab] = useState<'news' | 'channels' | 'users'>('news')
+  const [activeTab, setActiveTab] = useState<'news' | 'channels' | 'users' | 'analytics'>('news')
   const [channels, setChannels] = useState([])
   const [users, setUsers] = useState([])
-  const [news, setNews] = useState([])
+  const [news, setNews] = useState<any[]>([])
   const [showModal, setShowModal] = useState<string | null>(null)
   const [editingUser, setEditingUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [errorModal, setErrorModal] = useState<{show: boolean, message: string, details?: string}>({ show: false, message: '', details: '' })
   const [successModal, setSuccessModal] = useState<{show: boolean, message: string}>({ show: false, message: '' })
+  
+  // Фильтры
+  const [filterChannel, setFilterChannel] = useState<string>('all')
+  const [filterAuthor, setFilterAuthor] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
 
   // Hydration fix: wait for mount before rendering
   useEffect(() => {
@@ -38,6 +43,25 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
     } catch (error) {
       console.error('Error loading news:', error)
     }
+  }
+  
+  // Подсчет статистики
+  const getNewsCountByChannel = (channelId: string) => {
+    return news.filter(n => n.channel_id === channelId).length
+  }
+  
+  const getNewsCountByAuthor = (authorId: string) => {
+    return news.filter(n => n.author_id === authorId).length
+  }
+  
+  // Фильтрация новостей
+  const getFilteredNews = () => {
+    return news.filter(item => {
+      if (filterChannel !== 'all' && item.channel_id !== filterChannel) return false
+      if (filterAuthor !== 'all' && item.author_id !== filterAuthor) return false
+      if (filterStatus !== 'all' && item.status !== filterStatus) return false
+      return true
+    })
   }
 
   if (!mounted) {
@@ -121,6 +145,16 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                   📰 Новости
                 </button>
                 <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeTab === 'analytics'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  📊 Аналитика
+                </button>
+                <button
                   onClick={() => setActiveTab('channels')}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeTab === 'channels'
@@ -176,11 +210,67 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               </button>
             </div>
             
+            {/* Фильтры */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">📺 Канал:</label>
+                  <select 
+                    value={filterChannel}
+                    onChange={(e) => setFilterChannel(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <option value="all">Все каналы</option>
+                    {channels.map((channel: any) => (
+                      <option key={channel.id} value={channel.id}>{channel.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">👤 Автор:</label>
+                  <select 
+                    value={filterAuthor}
+                    onChange={(e) => setFilterAuthor(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <option value="all">Все авторы</option>
+                    {users.map((user: any) => (
+                      <option key={user.id} value={user.id}>{user.full_name || user.username}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">📋 Статус:</label>
+                  <select 
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                  >
+                    <option value="all">Все статусы</option>
+                    <option value="published">✅ Опубликовано</option>
+                    <option value="draft">✏️ Черновик</option>
+                  </select>
+                </div>
+              </div>
+              {(filterChannel !== 'all' || filterAuthor !== 'all' || filterStatus !== 'all') && (
+                <button
+                  onClick={() => {
+                    setFilterChannel('all')
+                    setFilterAuthor('all')
+                    setFilterStatus('all')
+                  }}
+                  className="mt-3 text-sm text-blue-600 hover:text-blue-700"
+                >
+                  🔄 Сбросить фильтры
+                </button>
+              )}
+            </div>
+            
             <div className="grid gap-4">
-              {news.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Новостей пока нет</p>
+              {getFilteredNews().length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Новостей нет</p>
               ) : (
-                news.map((item: any) => (
+                getFilteredNews().map((item: any) => (
                   <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
@@ -330,6 +420,94 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">📊 Аналитика</h2>
+            
+            {/* Статистика по каналам */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">📺 Новости по каналам</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {channels.map((channel: any) => (
+                  <div key={channel.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-lg">{channel.name}</h4>
+                      <span className="text-2xl">📺</span>
+                    </div>
+                    <p className="text-3xl font-bold text-blue-600 mb-2">
+                      {getNewsCountByChannel(channel.id)}
+                    </p>
+                    <p className="text-sm text-gray-500">новостей</p>
+                    <button
+                      onClick={() => {
+                        setFilterChannel(channel.id)
+                        setActiveTab('news')
+                      }}
+                      className="mt-3 w-full py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 transition-all"
+                    >
+                      👉 Показать новости
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Статистика по авторам */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">✍️ Новости по авторам</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {users.map((user: any) => (
+                  <div key={user.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                        {user.full_name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || '👤'}
+                      </div>
+                      <div>
+                        <h4 className="font-bold">{user.full_name || user.username}</h4>
+                        <p className="text-xs text-gray-500">@{user.username}</p>
+                      </div>
+                    </div>
+                    <p className="text-3xl font-bold text-purple-600 mb-2">
+                      {getNewsCountByAuthor(user.id)}
+                    </p>
+                    <p className="text-sm text-gray-500">новостей</p>
+                    <button
+                      onClick={() => {
+                        setFilterAuthor(user.id)
+                        setActiveTab('news')
+                      }}
+                      className="mt-3 w-full py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-100 transition-all"
+                    >
+                      👉 Показать новости
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Общая статистика */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                <p className="text-sm opacity-80">Всего новостей</p>
+                <p className="text-4xl font-bold mt-2">{news.length}</p>
+              </div>
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                <p className="text-sm opacity-80">Опубликовано</p>
+                <p className="text-4xl font-bold mt-2">
+                  {news.filter(n => n.status === 'published').length}
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
+                <p className="text-sm opacity-80">Черновики</p>
+                <p className="text-4xl font-bold mt-2">
+                  {news.filter(n => n.status === 'draft').length}
+                </p>
+              </div>
             </div>
           </div>
         )}
