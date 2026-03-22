@@ -15,10 +15,24 @@ export async function GET(request: Request) {
     
     console.log('📢 Public API - Fetching news:', { channelSlug, limit })
     
+    const supabasePublic = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    
     let query = supabasePublic
       .from('news')
       .select(`
-        *,
+        id,
+        title,
+        content,
+        excerpt,
+        slug,
+        status,
+        published_at,
+        created_at,
+        updated_at,
+        channel_id,
         channels (
           id,
           name,
@@ -26,8 +40,8 @@ export async function GET(request: Request) {
           url
         )
       `)
-      .eq('status', 'published') // Только опубликованные!
-      .order('published_at', { ascending: false })
+      .eq('status', 'published')
+      .order('published_at', { ascending: false, nullsFirst: false })
       .limit(limit)
     
     if (channelSlug) {
