@@ -67,6 +67,10 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
         onSuccess()
         setShowModal(null)
         setEditingUser(null)
+        // Обновляем список новостей после создания
+        if (endpoint === '/api/news/create') {
+          await loadNews()
+        }
         setTimeout(() => {
           window.location.reload()
         }, 1000)
@@ -337,6 +341,10 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
           <form onSubmit={(e) => {
             e.preventDefault()
             const fd = new FormData(e.currentTarget)
+            // Собираем выбранные каналы
+            const selectedChannels = Array.from(e.currentTarget.querySelectorAll('input[name="channel_ids"]:checked')).map((cb: any) => cb.value)
+            // Добавляем channel_ids к formData
+            fd.set('channel_ids', JSON.stringify(selectedChannels))
             handleSubmit('/api/news/create', fd, () => {})
           }} className="space-y-4">
             <div>
@@ -348,13 +356,24 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               <textarea name="content" rows={4} required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Введите текст" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Канал</label>
-              <select name="channel_id" required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
-                <option value="">Выберите канал</option>
-                {channels.map((channel: any) => (
-                  <option key={channel.id} value={channel.id}>{channel.name}</option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium mb-1">Каналы (можно несколько)</label>
+              <div className="border rounded-lg dark:border-gray-600 p-3 space-y-2 max-h-48 overflow-y-auto">
+                {channels.length === 0 ? (
+                  <p className="text-gray-500 text-sm">Каналов нет</p>
+                ) : (
+                  channels.map((channel: any) => (
+                    <label key={channel.id} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="channel_ids"
+                        value={channel.id}
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{channel.name}</span>
+                    </label>
+                  ))
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Статус</label>

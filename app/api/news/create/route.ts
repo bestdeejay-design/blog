@@ -7,15 +7,25 @@ export async function POST(request: Request) {
     const formData = await request.formData()
     const title = formData.get('title') as string
     const content = formData.get('content') as string
-    const channelId = formData.get('channel_id') as string
     const status = formData.get('status') as string || 'draft'
+    const channelIdsRaw = formData.get('channel_ids') as string | null
+    
+    // Парсим выбранные каналы
+    let channelIds: string[] = []
+    if (channelIdsRaw) {
+      try {
+        channelIds = JSON.parse(channelIdsRaw)
+      } catch (e) {
+        console.error('Failed to parse channel_ids:', e)
+      }
+    }
+    
+    console.log('FormData:', { title, content: content?.substring(0, 50) + '...', channelIds, status })
 
-    console.log('FormData:', { title, content: content?.substring(0, 50) + '...', channelId, status })
-
-    if (!title || !channelId) {
-      console.error('Missing required fields:', { title, channelId })
+    if (!title || channelIds.length === 0) {
+      console.error('Missing required fields:', { title, channelIds })
       return NextResponse.json(
-        { error: 'Заголовок и канал обязательны' },
+        { error: 'Заголовок и хотя бы один канал обязательны' },
         { status: 400 }
       )
     }
@@ -95,7 +105,7 @@ export async function POST(request: Request) {
       title,
       slug, // Добавляем slug
       content: content || '',
-      channel_id: channelId,
+      channel_id: channelIds[0], // Первый канал как основной
       author_id: authorId, // ALWAYS set author_id
       status,
       created_at: new Date().toISOString(),
@@ -104,19 +114,37 @@ export async function POST(request: Request) {
     
     console.log('Inserting into database:', insertData)
     
-    const { data, error } = await supabaseAdmin
+    const { data: newsItem, error: newsError } = await supabaseAdmin
       .from('news')
       .insert(insertData)
       .select()
       .single()
 
-    if (error) {
-      console.error('Supabase error:', error)
-      throw error
+    if (newsError) {
+      console.error('Supabase error:', newsError)
+      throw newsError
     }
-
-    console.log('News created successfully:', data.id)
-    return NextResponse.json({ success: true, news: data })
+    
+    // Создаем записи в news_channels для всех выбранных каналов
+    if (channelIds.length > 0) {
+      const newsChannelRecords = channelIds.map(channelId => ({
+        news_id: newsItem.id,
+        channel_id: channelId,
+        published_at: status === 'published' ? new Date().toISOString() : null
+      }))
+      
+      const { error: ncError } = await supabaseAdmin
+        .from('news_channels')
+        .insert(newsChannelRecords)
+      
+      if (ncError) {
+        console.error('Error creating news_channels:', ncError)
+        // Не прерываем выполнение, основная новость уже создана
+      }
+    }
+    
+    console.log('News created successfully:', newsItem.id)
+    return NextResponse.json({ success: true, news: newsItem })
   } catch (error: any) {
     console.error('Create news error:', error)
     console.error('Error details:', JSON.stringify(error, null, 2))
