@@ -4,6 +4,14 @@
 
 ---
 
+## ⚠️ ВАЖНО: Настройка API
+
+Для работы новостей на GitHub Pages необходимо добавить переменную окружения в Vercel.
+
+**Инструкция:** Откройте [`URGENT_FIX.md`](./URGENT_FIX.md) и следуйте шагам!
+
+После настройки откроется https://bestdeejay-design.github.io/blog/test-news-widget.html
+
 ## 🚀 Тестирование новостей
 
 ### GitHub Pages (статический HTML)
