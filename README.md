@@ -1,146 +1,135 @@
-# Простая система управления новостями
+# 📰 Блог - Новости
 
-## 🚀 Быстрый старт
-
-### 1. Установка зависимостей
-
-```bash
-npm install
-```
-
-### 2. Настройка Supabase
-
-1. Откройте https://supabase.com/dashboard/project/mtxhzvxetxcppzwgrrsu
-2. Перейдите в SQL Editor
-3. Выполните SQL для создания таблиц (если еще не созданы):
-
-```sql
--- Добавим поле username в user_profiles если его нет
-ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS username TEXT;
-ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS password TEXT;
-```
-
-### 3. Настройка переменных окружения
-
-Скопируйте `.env.local.example` в `.env.local`:
-
-```bash
-cp .env.local.example .env.local
-```
-
-Заполните `.env.local`:
-- `NEXT_PUBLIC_SUPABASE_URL` - ваш URL из Supabase
-- `SUPABASE_SERVICE_ROLE_KEY` - ваш Service Role ключ из Supabase
-
-### 4. Запуск локально
-
-```bash
-npm run dev
-```
-
-Сайт доступен: http://localhost:3000
-
-### 5. Вход в систему
-
-**Используйте ваши учетные данные:**
-- Логин: `dj@li.ru` (или ваш email)
-- Пароль: ваш пароль
-
-**Тестовый вход (если работаете локально):**
-- Логин: `admin`
-- Пароль: `admin123`
+Простая система управления новостями с поддержкой нескольких каналов.
 
 ---
 
-## 📊 База данных
+## 🚀 Тестирование новостей
 
-Все данные хранятся в **Supabase PostgreSQL**:
+### GitHub Pages (статический HTML)
 
-- ✅ **users** (user_profiles) - пользователи
-- ✅ **channels** - каналы
-- ✅ **channel_editors** - привязки редакторов
-- ✅ **news** - новости (будет добавлено)
+**📍 URL:** https://bestdeejay-design.github.io/blog/test-news-widget.html
 
----
-
-## 🔧 Как использовать
-
-### 1️⃣ Войти в админку
-
-1. Откройте https://blog-three-opal-85.vercel.app/login
-2. Введите логин/пароль
-3. Попадаете в дашборд
-
-### 2️⃣ Создать пользователя
-
-1. В дашборде форма "Создать пользователя"
-2. Заполните:
-   - Логин (уникальный)
-   - Пароль (мин 6 символов)
-   - Имя
-   - Роль (редактор/админ/супер-админ)
-3. Нажмите "Создать"
-
-### 3️⃣ Создать канал
-
-1. В дашборде форма "Создать канал"
-2. Название и ключ (slug)
-3. Нажмите "Создать канал"
+Откройте ссылку выше чтобы увидеть последние новости!
 
 ---
 
-## 🌐 Деплой на Vercel
+## 🔧 Технологии
 
-Автоматически при push в GitHub:
+- **Frontend:** Next.js 16, React 19, TypeScript
+- **Backend:** Supabase (PostgreSQL)
+- **Хостинг:** Vercel + GitHub Pages
+- **Стили:** Tailwind CSS
+
+---
+
+## 📊 Возможности
+
+✅ Управление новостями  
+✅ Мультиканальность (одна новость в нескольких каналах)  
+✅ Фильтрация по каналам и авторам  
+✅ Аналитика и статистика  
+✅ Публичный API для внешних сайтов  
+✅ Черновики и опубликованные материалы  
+
+---
+
+## 🌐 API
+
+### Публичный API для новостей
 
 ```bash
-git add .
-git commit -m "Update"
-git push
+# Получить последние новости
+GET https://blog-three-opal-85.vercel.app/api/public/news
+
+# Фильтр по каналу
+GET https://blog-three-opal-85.vercel.app/api/public/news?channel=main
+
+# Лимит записей
+GET https://blog-three-opal-85.vercel.app/api/public/news?limit=5
 ```
 
-Vercel сам обновит сайт.
-
-**ВАЖНО:** Добавьте переменные окружения в Vercel:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-
----
-
-## 📝 API
-
-### POST /api/auth/signin
-Вход в систему
+**Ответ:**
 ```json
 {
-  "username": "admin",
-  "password": "admin123"
+  "success": true,
+  "news": [
+    {
+      "id": "...",
+      "title": "...",
+      "content": "...",
+      "channels": { "name": "...", "slug": "..." },
+      "user_profiles": { "full_name": "..." }
+    }
+  ]
 }
 ```
 
-### POST /api/users/create
-Создать пользователя (FormData)
+---
 
-### POST /api/channels/create
-Создать канал (FormData)
+## 👥 Админка
+
+**Вход в админку:** https://blog-three-opal-85.vercel.app/login
+
+**Роль:** super_admin  
+**Email:** dj@li.ru  
 
 ---
 
-## 🔐 Безопасность
+## 📁 Структура проекта
 
-- Пароли хешируются через bcrypt
-- JWT токены для сессий (24 часа)
-- HttpOnly cookies
-- Supabase RLS (настраивается отдельно)
+```
+├── app/
+│   ├── api/              # API endpoints
+│   │   ├── news/         # CRUD новостей
+│   │   ├── channels/     # Управление каналами
+│   │   ├── users/        # Пользователи
+│   │   └── public/       # Публичный API
+│   ├── dashboard/        # Админ панель
+│   └── test-news-widget/ # Тестовая страница
+├── public/               # Статические файлы
+├── lib/                  # Утилиты и helpers
+└── test-news-widget.html # Виджет для GitHub Pages
+```
 
 ---
 
-## 🎯 Что дальше?
+## 🎯 Для разработчиков
 
-1. ✅ Авторизация работает
-2. ✅ Создание пользователей работает
-3. ✅ Создание каналов работает
-4. ⏳ Добавление новостей (следующий шаг)
-5. ⏳ Редактирование новостей
-6. ⏳ Публикация/скрытие
-7. ⏳ Вывод новостей на сайтах
+### Интеграция виджета на ваш сайт
+
+```html
+<!-- Добавьте этот код на вашу страницу -->
+<div id="news-widget">
+  <h2>📰 Последние новости</h2>
+  <div id="news-container"></div>
+</div>
+
+<script>
+const API_URL = 'https://blog-three-opal-85.vercel.app/api/public/news';
+
+async function loadNews() {
+  const response = await fetch(API_URL + '?limit=10');
+  const data = await response.json();
+  
+  if (data.success && data.news) {
+    // Отобразить новости
+    console.log(data.news);
+  }
+}
+
+loadNews();
+</script>
+```
+
+Полная документация в файле [`GITHUB_PAGES_WIDGET.md`](./GITHUB_PAGES_WIDGET.md)
+
+---
+
+## 📝 Лицензия
+
+MIT
+
+---
+
+**🔗 Сайт с новостями:** https://bestdeejay-design.github.io/blog/test-news-widget.html
