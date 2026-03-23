@@ -108,6 +108,7 @@ export async function POST(request: Request) {
       channel_id: channelIds[0], // Первый канал как основной
       author_id: authorId, // ALWAYS set author_id
       status,
+      published_at: status === 'published' ? new Date().toISOString() : null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
