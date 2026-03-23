@@ -10,6 +10,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   const [news, setNews] = useState<any[]>([])
   const [showModal, setShowModal] = useState<string | null>(null)
   const [editingUser, setEditingUser] = useState<any>(null)
+  const [editingNews, setEditingNews] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [errorModal, setErrorModal] = useState<{show: boolean, message: string, details?: string}>({ show: false, message: '', details: '' })
@@ -302,10 +303,17 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <button className="text-blue-600 hover:text-blue-700 p-2">
+                        <button 
+                          onClick={() => {
+                            setEditingNews(item)
+                            setShowModal('edit-news')
+                          }} 
+                          className="text-blue-600 hover:text-blue-700 p-2 hover:bg-blue-50 dark:hover:bg-gray-700 rounded transition-all"
+                          title="Редактировать"
+                        >
                           ✏️
                         </button>
-                        <button className="text-red-600 hover:text-red-700 p-2">
+                        <button className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 dark:hover:bg-gray-700 rounded transition-all" title="Удалить">
                           🗑️
                         </button>
                       </div>
@@ -526,42 +534,102 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             handleSubmit('/api/news/create', fd, () => {})
           }} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Заголовок</label>
-              <input type="text" name="title" required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Введите заголовок" />
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Заголовок</label>
+              <input type="text" name="title" required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all" placeholder="Введите заголовок" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Текст новости</label>
-              <textarea name="content" rows={4} required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Введите текст" />
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Текст новости</label>
+              <textarea name="content" rows={5} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" placeholder="Введите текст новости" style={{ minHeight: '120px' }} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Каналы (можно несколько)</label>
-              <div className="border rounded-lg dark:border-gray-600 p-3 space-y-2 max-h-48 overflow-y-auto">
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Каналы</label>
+              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto bg-white dark:bg-gray-700">
                 {channels.length === 0 ? (
                   <p className="text-gray-500 text-sm">Каналов нет</p>
                 ) : (
                   channels.map((channel: any) => (
-                    <label key={channel.id} className="flex items-center space-x-2 cursor-pointer">
+                    <label key={channel.id} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded transition-colors">
                       <input
                         type="checkbox"
                         name="channel_ids"
                         value={channel.id}
-                        className="rounded text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{channel.name}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{channel.name}</span>
                     </label>
                   ))
                 )}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Статус</label>
-              <select name="status" defaultValue="draft" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
-                <option value="draft">Черновик</option>
-                <option value="published">Опубликовано</option>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Статус</label>
+              <select name="status" defaultValue="draft" className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all">
+                <option value="draft">✏️ Черновик</option>
+                <option value="published">✅ Опубликовано</option>
               </select>
             </div>
-            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
+            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
               {loading ? '⏳ Создание...' : '✅ Создать новость'}
+            </button>
+          </form>
+        </Modal>
+      )}
+      {showModal === 'edit-news' && editingNews && (
+        <Modal title="✏️ Редактировать новость" onClose={() => {
+          setShowModal(null)
+          setEditingNews(null)
+        }}>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const fd = new FormData(e.currentTarget)
+            const selectedChannels = Array.from(e.currentTarget.querySelectorAll('input[name="channel_ids"]:checked')).map((cb: any) => cb.value)
+            const data = {
+              id: editingNews.id,
+              title: fd.get('title') as string,
+              content: fd.get('content') as string,
+              status: fd.get('status') as string,
+              channel_ids: selectedChannels
+            }
+            handleSubmit('/api/news/update', data, () => {})
+          }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Заголовок</label>
+              <input type="text" name="title" defaultValue={editingNews.title} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Текст новости</label>
+              <textarea name="content" rows={5} defaultValue={editingNews.content} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" style={{ minHeight: '120px' }} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Каналы</label>
+              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto bg-white dark:bg-gray-700">
+                {channels.length === 0 ? (
+                  <p className="text-gray-500 text-sm">Каналов нет</p>
+                ) : (
+                  channels.map((channel: any) => (
+                    <label key={channel.id} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        name="channel_ids"
+                        value={channel.id}
+                        defaultChecked={editingNews.channel_id === channel.id}
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{channel.name}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Статус</label>
+              <select name="status" defaultValue={editingNews.status} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all">
+                <option value="draft">✏️ Черновик</option>
+                <option value="published">✅ Опубликовано</option>
+              </select>
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+              {loading ? '⏳ Сохранение...' : '💾 Сохранить изменения'}
             </button>
           </form>
         </Modal>
