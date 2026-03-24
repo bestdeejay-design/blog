@@ -131,3 +131,86 @@ body:not(.light) .ql-snow .ql-stroke {
 body:not(.light) .ql-snow .ql-fill {
   fill: #8b949e !important;
 }
+
+/* —— Utility Classes for Dashboard —— */
+/* These replace Tailwind classes for theme-aware styling */
+
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.border-primary {
+  border-color: var(--border-primary);
+}
+
+.border-secondary {
+  border-color: var(--border-secondary);
+}
+
+/* Hover states */
+.hover-bg-tertiary:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Shadow utilities */
+.shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-md);
+}
+
+.shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Accent colors */
+.bg-accent-primary {
+  background-color: var(--accent-primary);
+}
+
+.text-accent-primary {
+  color: var(--accent-primary);
+}
+
+.bg-accent-success {
+  background-color: var(--accent-success);
+}
+
+.bg-accent-warning {
+  background-color: var(--accent-warning);
+}
+
+.bg-accent-danger {
+  background-color: var(--accent-danger);
+}
+
+.text-accent-danger {
+  color: var(--accent-danger);
+}
+
+.hover-bg-tertiary:hover,
+.hover-text-primary:hover {
+  color: var(--text-primary);
+}
