@@ -63,7 +63,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
       console.log('✏️ Initializing Quill for EDIT')
       console.log('📄 Content to load:', editingNews?.content?.substring(0, 100))
       console.log('📊 Status:', editingNews?.status)
-      initQuill(editEditorRef.current, quillEdit, editingNews?.content || '')
+      initQuill(editEditorRef.current, quillEdit, editingNews?.content || '', '#edit-toolbar')
     }
   }, [showModal, editingNews])
   
@@ -85,7 +85,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   }, [theme])
   
   // Initialize Quill editor
-  const initQuill = async (container: HTMLDivElement, quillRef: any, initialContent: string = '') => {
+  const initQuill = async (container: HTMLDivElement, quillRef: any, initialContent: string = '', toolbarSelector: string = '#create-toolbar') => {
     // Dynamically load Quill CSS
     if (!document.querySelector('link[href*="quill.snow.css"]')) {
       const link = document.createElement('link')
@@ -104,13 +104,8 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
         quillRef.current = new Quill(container, {
           theme: 'snow',
           modules: {
-            toolbar: [
-              [{ 'header': [1, 2, 3, false] }],
-              ['bold', 'italic', 'underline'],
-              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-              ['link'],
-              ['clean']
-            ]
+            // Use external toolbar container defined in JSX
+            toolbar: toolbarSelector
           }
         })
         
@@ -124,13 +119,8 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
       quillRef.current = new Quill(container, {
         theme: 'snow',
         modules: {
-          toolbar: [
-            [{ 'header': [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link'],
-            ['clean']
-          ]
+          // Use external toolbar container defined in JSX
+          toolbar: toolbarSelector
         }
       })
       
@@ -836,8 +826,36 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 text-secondary">Текст новости</label>
-              <div ref={createEditorRef} className="border border-primary rounded-lg bg-secondary min-h-[200px]" />
+              {/* Fixed Toolbar - Always visible */}
+              <div className="sticky top-0 z-50 bg-secondary border border-b-0 border-primary rounded-t-lg">
+                <div id="create-toolbar" className="ql-toolbar ql-snow">
+                  <span className="ql-formats">
+                    <select className="ql-header"></select>
+                    <select className="ql-font"></select>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-bold"></button>
+                    <button className="ql-italic"></button>
+                    <button className="ql-underline"></button>
+                    <button className="ql-strike"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-list" value="ordered"></button>
+                    <button className="ql-list" value="bullet"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-link"></button>
+                    <button className="ql-image"></button>
+                    <button className="ql-video"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-clean"></button>
+                  </span>
+                </div>
+              </div>
+              <div ref={createEditorRef} className="border border-primary rounded-b-lg bg-secondary min-h-[400px] max-h-[600px] overflow-y-auto" />
               <input type="hidden" name="content" id="create-content-field" />
+              <p className="text-xs text-secondary mt-2">💡 Совет: Используйте заголовки H2, H3 для структуры. Toolbar всегда виден при прокрутке.</p>
             </div>
             <div>
               <label className="block text-sm font-medium mb-2 text-secondary">📷 Медиа</label>
@@ -996,8 +1014,36 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 text-secondary">Текст новости</label>
-              <div ref={editEditorRef} className="border border-primary rounded-lg bg-secondary min-h-[200px]" />
+              {/* Fixed Toolbar - Always visible */}
+              <div className="sticky top-0 z-50 bg-secondary border border-b-0 border-primary rounded-t-lg">
+                <div id="edit-toolbar" className="ql-toolbar ql-snow">
+                  <span className="ql-formats">
+                    <select className="ql-header"></select>
+                    <select className="ql-font"></select>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-bold"></button>
+                    <button className="ql-italic"></button>
+                    <button className="ql-underline"></button>
+                    <button className="ql-strike"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-list" value="ordered"></button>
+                    <button className="ql-list" value="bullet"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-link"></button>
+                    <button className="ql-image"></button>
+                    <button className="ql-video"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-clean"></button>
+                  </span>
+                </div>
+              </div>
+              <div ref={editEditorRef} className="border border-primary rounded-b-lg bg-secondary min-h-[400px] max-h-[600px] overflow-y-auto" />
               <input type="hidden" name="content" id="edit-content-field" />
+              <p className="text-xs text-secondary mt-2">💡 Совет: Toolbar зафиксирован и всегда виден при прокрутке текста.</p>
             </div>
             <div>
               <label className="block text-sm font-medium mb-2 text-secondary">📷 Медиа (существующее)</label>
