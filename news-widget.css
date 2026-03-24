@@ -33,6 +33,7 @@
   padding: 18px;
   display: flex;
   flex-direction: column;
+  height: 100%; /* Гарантируем высоту */
 }
 
 .news-widget-title {
@@ -41,18 +42,19 @@
   margin-bottom: 8px;
   line-height: 1.4;
   color: var(--ink, #e2e8f0);
+  flex-shrink: 0; /* Заголовок не сжимается */
 }
 
 .news-widget-excerpt {
   font-size: 0.9rem;
   color: var(--muted, #94a3b8);
   line-height: 1.5;
-  margin-bottom: 12px;
+  margin-bottom: 0; /* Убираем margin для корректной работы flexbox */
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  flex-grow: 1;
+  flex-grow: 1; /* Растягиваем чтобы прижать дату к низу */
 }
 
 .news-widget-meta {
