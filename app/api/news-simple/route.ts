@@ -64,14 +64,34 @@ export async function GET(request: Request) {
       }
     })
     
-    return NextResponse.json({ 
+    // Добавляем CORS заголовки для GitHub Pages
+    const response = NextResponse.json({ 
       success: true, 
       news: newsWithThumbnails,
       hasMore: offset + limit < (count || 0),
       total: count || 0
     })
+    
+    // Разрешаем запросы с GitHub Pages
+    response.headers.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+    
+    return response
   } catch (error: any) {
     console.error('API Error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+}
+
+// Обработчик OPTIONS запросов для CORS
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  })
 }
