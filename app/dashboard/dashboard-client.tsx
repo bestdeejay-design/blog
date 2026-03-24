@@ -47,15 +47,19 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
     }
   }, [initialChannels, initialUsers, showModal, editingNews])
   
-  // Theme application
+  // Theme application - use 'dark' class for Tailwind compatibility
   useEffect(() => {
     console.log('🎨 Switching theme to:', theme)
-    if (theme === 'light') {
-      document.body.classList.add('light')
-      console.log('✅ Added .light class to body')
-    } else {
+    if (theme === 'dark') {
+      // Dark theme = add .dark class for Tailwind
+      document.body.classList.add('dark')
       document.body.classList.remove('light')
-      console.log('✅ Removed .light class from body')
+      console.log('✅ Added .dark class, removed .light')
+    } else {
+      // Light theme = remove .dark and add .light
+      document.body.classList.remove('dark')
+      document.body.classList.add('light')
+      console.log('✅ Removed .dark, added .light')
     }
     localStorage.setItem('dashboard-theme', theme)
   }, [theme])
