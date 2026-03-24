@@ -68,14 +68,6 @@
     color: var(--muted);
   }
   
-  .news-channel-arental {
-    background: var(--primary-weak);
-    color: var(--primary);
-    padding: 4px 10px;
-    border-radius: 99px;
-    font-weight: 600;
-  }
-  
   .news-date-arental {
     display: flex;
     align-items: center;
@@ -176,7 +168,6 @@
           day: 'numeric'
         });
         
-        const channelName = news.channels?.name || 'Без канала';
         const excerpt = news.excerpt || (news.content ? news.content.substring(0, 150) + '...' : '');
         const imageUrl = news.thumbnail || null;
         
