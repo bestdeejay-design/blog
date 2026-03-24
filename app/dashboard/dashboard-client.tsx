@@ -315,25 +315,25 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
                 <button
                   onClick={() => setTheme('light')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  className={`w-8 h-8 rounded-md text-sm font-medium transition-all flex items-center justify-center ${
                     theme === 'light'
                       ? 'bg-white dark:bg-gray-700 text-gray-900 shadow-sm'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
                   }`}
                   title="Светлая тема"
                 >
-                  ☀️
+                  •
                 </button>
                 <button
                   onClick={() => setTheme('dark')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  className={`w-8 h-8 rounded-md text-sm font-medium transition-all flex items-center justify-center ${
                     theme === 'dark'
                       ? 'bg-gray-900 text-white shadow-sm'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
                   }`}
                   title="Тёмная тема"
                 >
-                  🌙
+                  •
                 </button>
               </div>
               
