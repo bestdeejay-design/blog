@@ -180,6 +180,8 @@
     
     .news-content-arental {
       padding: 18px;
+      display: flex;
+      flex-direction: column;
     }
     
     .news-title-arental {
@@ -199,6 +201,7 @@
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      flex-grow: 1;
     }
     
     .news-meta-arental {
@@ -207,6 +210,9 @@
       align-items: center;
       font-size: 0.8rem;
       color: var(--muted);
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
     }
     
     .news-channel-arental {
@@ -721,19 +727,18 @@
             day: 'numeric'
           });
           
-          const channelName = news.channels?.name || 'Без канала';
           const excerpt = news.excerpt || (news.content ? news.content.substring(0, 150) + '...' : '');
           const imageUrl = news.thumbnail || null;
           
           const card = document.createElement('div');
           card.className = 'news-card-arental';
           card.onclick = () => openNewsModal(news);
-          card.innerHTML = createNewsCard(imageUrl, news.title, excerpt, channelName, date);
+          card.innerHTML = createNewsCard(imageUrl, news.title, excerpt, date);
           container.appendChild(card);
         });
       }
       
-      function createNewsCard(imageUrl, title, excerpt, channelName, date) {
+      function createNewsCard(imageUrl, title, excerpt, date) {
         let html = '';
         if (imageUrl) {
           html += '<img src="' + escapeHtml(imageUrl) + '" alt="" class="news-image-arental" />';
@@ -742,7 +747,6 @@
         html += '<h3 class="news-title-arental">' + escapeHtml(title) + '</h3>';
         html += '<p class="news-excerpt-arental">' + escapeHtml(excerpt) + '</p>';
         html += '<div class="news-meta-arental">';
-        html += '<span class="news-channel-arental">📺 ' + escapeHtml(channelName) + '</span>';
         html += '<span class="news-date-arental">📅 ' + date + '</span>';
         html += '</div></div>';
         return html;
