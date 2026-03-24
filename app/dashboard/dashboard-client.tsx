@@ -367,7 +367,37 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                         >
                           ✏️
                         </button>
-                        <button className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 dark:hover:bg-gray-700 rounded transition-all" title="Удалить">
+                        <button 
+                          onClick={async () => {
+                            if (confirm(`Переместить новость "${item.title}" в черновики?`)) {
+                              setLoading(true)
+                              try {
+                                const response = await fetch('/api/news/update', {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    id: item.id,
+                                    status: 'draft'
+                                  })
+                                })
+                                const result = await response.json()
+                                if (response.ok) {
+                                  alert('✅ Новость перемещена в черновики')
+                                  await loadNews()
+                                } else {
+                                  alert('❌ Ошибка: ' + result.error)
+                                }
+                              } catch (error) {
+                                console.error('Soft delete error:', error)
+                                alert('❌ Ошибка при перемещении в черновики')
+                              } finally {
+                                setLoading(false)
+                              }
+                            }
+                          }} 
+                          className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 dark:hover:bg-gray-700 rounded transition-all" 
+                          title="Переместить в черновики"
+                        >
                           🗑️
                         </button>
                       </div>
