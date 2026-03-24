@@ -46,7 +46,8 @@ export async function GET(request: Request) {
       query = query.in('id', newsIds)
     }
     
-    query = query.order('published_at', { ascending: false, nullsFirst: false })
+    // Сортируем по дате создания (новые сверху)
+    query = query.order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
     
     const { data, error, count } = await query

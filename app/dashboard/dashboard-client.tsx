@@ -608,12 +608,14 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             e.preventDefault()
             const fd = new FormData(e.currentTarget)
             const selectedChannels = Array.from(e.currentTarget.querySelectorAll('input[name="channel_ids"]:checked')).map((cb: any) => cb.value)
+            const updateCreatedAt = fd.get('update_created_at') === 'on'
             const data = {
               id: editingNews.id,
               title: fd.get('title') as string,
               content: fd.get('content') as string,
               status: fd.get('status') as string,
-              channel_ids: selectedChannels
+              channel_ids: selectedChannels,
+              update_created_at: updateCreatedAt
             }
             handleSubmit('/api/news/update', data, () => {})
           }} className="space-y-4">
@@ -689,6 +691,22 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                 <option value="draft">✏️ Черновик</option>
                 <option value="published">✅ Опубликовано</option>
               </select>
+            </div>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <label className="flex items-start space-x-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  name="update_created_at"
+                  className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 mt-0.5"
+                />
+                <div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">📅 Обновить дату создания</span>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    Если отмечено, дата создания изменится на текущую (как будто новость создана сейчас). 
+                    Используйте для поднятия новости вверх ленты.
+                  </p>
+                </div>
+              </label>
             </div>
             <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
               {loading ? '⏳ Сохранение...' : '💾 Сохранить изменения'}

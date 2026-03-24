@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function PUT(request: Request) {
   try {
-    const { id, title, content, status, channel_ids } = await request.json()
+    const { id, title, content, status, channel_ids, update_created_at } = await request.json()
 
     if (!id) {
       return NextResponse.json({ error: 'ID новости обязателен' }, { status: 400 })
@@ -18,6 +18,11 @@ export async function PUT(request: Request) {
 
     if (title !== undefined) updateData.title = title
     if (content !== undefined) updateData.content = content
+    
+    // Если флаг update_created_at установлен - обновляем дату создания
+    if (update_created_at) {
+      updateData.created_at = new Date().toISOString()
+    }
     
     // Если меняем статус на published - ставим published_at
     if (status !== undefined) {
