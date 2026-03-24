@@ -387,7 +387,7 @@
         <div class="modal-article-meta">
           <span class="news-date">📅 ${date}</span>
         </div>
-        <div class="modal-article-content">${formatContent(news.content)}</div>
+        <div class="modal-article-content">${formatContent(news.content, news.media || [])}</div>
       `;
       
       overlay.classList.add('active');
@@ -403,11 +403,53 @@
       document.body.style.overflow = '';
     }
     
-    function formatContent(content) {
-      if (!content) return '';
+    function formatContent(content, media) {
+      if (!content && (!media || media.length === 0)) return '';
       
-      // Basic formatting - paragraphs
-      return content.split('\n\n').map(p => `<p>${p}</p>`).join('');
+      let html = '';
+      
+      // Показываем медиа первым
+      if (media && media.length > 0) {
+        html += '<div style="margin-bottom: 24px;">';
+        media.forEach(item => {
+          if (item.type === 'image') {
+            html += `<img src="${escapeHtml(item.url)}" alt="News image" style="max-width: 100%; height: auto; border-radius: 12px; margin: 16px 0;" />`;
+          } else if (['youtube', 'rutube', 'vk'].includes(item.type) && item.videoId) {
+            const embedUrl = getVideoEmbedUrl(item.type, item.videoId);
+            html += `
+              <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 16px 0; border-radius: 12px; background: #000;">
+                <iframe src="${embedUrl}" 
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                        frameborder="0" 
+                        allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                </iframe>
+              </div>
+            `;
+          }
+        });
+        html += '</div>';
+      }
+      
+      // Затем контент
+      if (content) {
+        html += content.split('\n\n').map(p => `<p>${p}</p>`).join('');
+      }
+      
+      return html;
+    }
+    
+    function getVideoEmbedUrl(type, videoId) {
+      switch (type) {
+        case 'youtube':
+          return `https://www.youtube.com/embed/${videoId}`;
+        case 'rutube':
+          return `https://rutube.ru/play/embed/${videoId}`;
+        case 'vk':
+          return `https://vk.com/video_ext.php?oid=${videoId.replace('_', '&oid=')}`;
+        default:
+          return '';
+      }
     }
     
     function escapeHtml(text) {

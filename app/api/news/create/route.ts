@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { uploadImage, extractVideoId } from '@/lib/media'
 
 export async function POST(request: Request) {
   try {
@@ -110,7 +111,8 @@ export async function POST(request: Request) {
       status,
       published_at: status === 'published' ? new Date().toISOString() : null,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      media: [] as any[] // Инициализируем пустой массив медиа
     }
     
     console.log('Inserting into database:', insertData)
@@ -124,6 +126,45 @@ export async function POST(request: Request) {
     if (newsError) {
       console.error('Supabase error:', newsError)
       throw newsError
+    }
+    
+    // 📷 Обработка медиа (картинки и видео)
+    const mediaArray: any[] = []
+    
+    // Загрузка изображения если есть
+    const mediaImageFile = formData.get('media_image') as File | null
+    if (mediaImageFile && mediaImageFile.size > 0) {
+      const uploadResult = await uploadImage(mediaImageFile, newsItem.id)
+      if (uploadResult.success) {
+        mediaArray.push({
+          type: 'image',
+          url: uploadResult.url,
+          caption: ''
+        })
+      }
+    }
+    
+    // Обработка видео если есть ссылка
+    const mediaVideoUrl = formData.get('media_video') as string | null
+    if (mediaVideoUrl) {
+      const videoInfo = extractVideoId(mediaVideoUrl)
+      if (videoInfo) {
+        mediaArray.push({
+          type: videoInfo.type,
+          url: mediaVideoUrl,
+          videoId: videoInfo.videoId
+        })
+      }
+    }
+    
+    // Обновляем новость с медиа если что-то загрузили
+    if (mediaArray.length > 0) {
+      await supabaseAdmin
+        .from('news')
+        .update({ media: mediaArray })
+        .eq('id', newsItem.id)
+      
+      newsItem.media = mediaArray
     }
     
     // Создаем записи в news_channels для всех выбранных каналов
