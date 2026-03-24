@@ -5,7 +5,10 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData()
     const name = formData.get('name') as string
-    const slug = formData.get('slug') as string
+    let slug = formData.get('slug') as string
+    
+    // Нормализуем slug: убираем пробелы, приводим к нижнему регистру
+    slug = slug.trim().replace(/\s+/g, '-').toLowerCase()
 
     if (!name || !slug) {
       return NextResponse.json(
