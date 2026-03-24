@@ -854,6 +854,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             const submitData = new FormData()
             submitData.append('id', editingNews.id)
             submitData.append('title', fd.get('title') as string)
+            submitData.append('excerpt', fd.get('excerpt') as string || '')
             submitData.append('content', fd.get('content') as string)
             submitData.append('status', fd.get('status') as string)
             

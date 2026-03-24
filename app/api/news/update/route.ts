@@ -17,6 +17,7 @@ export async function PUT(request: Request) {
       const formData = await request.formData()
       data.id = formData.get('id') as string
       data.title = formData.get('title') as string
+      data.excerpt = formData.get('excerpt') as string || ''
       data.content = formData.get('content') as string
       data.status = formData.get('status') as string
       data.update_created_at = formData.get('update_created_at') === 'on'
@@ -61,7 +62,7 @@ export async function PUT(request: Request) {
       console.log('📦 JSON:', { id: data.id, title: data.title?.substring(0, 50), channel_ids: data.channel_ids })
     }
     
-    const { id, title, content, status, channel_ids, update_created_at } = data
+    const { id, title, excerpt, content, status, channel_ids, update_created_at } = data
 
     if (!id) {
       console.error('❌ ID is required')
@@ -76,6 +77,7 @@ export async function PUT(request: Request) {
     }
 
     if (title !== undefined) updateData.title = title
+    if (excerpt !== undefined) updateData.excerpt = excerpt
     if (content !== undefined) updateData.content = content
     
     // Если флаг update_created_at установлен - обновляем дату создания
