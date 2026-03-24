@@ -706,9 +706,20 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             // Sync content from Quill editor
             if (quillCreate.current) {
               const html = quillCreate.current.root.innerHTML
+              
+              // If HTML is just plain text (no tags), wrap in paragraphs
+              const hasHtmlTags = /<[a-z][\s\S]*>/i.test(html)
+              let finalContent = html
+              
+              if (!hasHtmlTags && html.trim()) {
+                // Plain text - split by double newlines and wrap each paragraph
+                const paragraphs = html.split('\n\n').filter((p: string) => p.trim())
+                finalContent = paragraphs.map((p: string) => '<p>' + p.trim() + '</p>').join('')
+              }
+              
               const textField = document.getElementById('create-content-field')
               if (textField) {
-                textField.setAttribute('value', html)
+                textField.setAttribute('value', finalContent)
               }
             }
             
@@ -809,9 +820,20 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             // Sync content from Quill editor
             if (quillEdit.current) {
               const html = quillEdit.current.root.innerHTML
+              
+              // If HTML is just plain text (no tags), wrap in paragraphs
+              const hasHtmlTags = /<[a-z][\s\S]*>/i.test(html)
+              let finalContent = html
+              
+              if (!hasHtmlTags && html.trim()) {
+                // Plain text - split by double newlines and wrap each paragraph
+                const paragraphs = html.split('\n\n').filter((p: string) => p.trim())
+                finalContent = paragraphs.map((p: string) => '<p>' + p.trim() + '</p>').join('')
+              }
+              
               const textField = document.getElementById('edit-content-field')
               if (textField) {
-                textField.setAttribute('value', html)
+                textField.setAttribute('value', finalContent)
               }
             }
             
