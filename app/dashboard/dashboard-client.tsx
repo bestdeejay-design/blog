@@ -44,28 +44,28 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
     setUsers(initialUsers || [])
     // Load news on mount
     loadNews()
-    
-    // Initialize Quill editors when modals open
-    useEffect(() => {
-      console.log('🔍 Checking Quill initialization...')
-      console.log('  showModal:', showModal)
-      console.log('  createEditorRef.current:', !!createEditorRef.current)
-      console.log('  editEditorRef.current:', !!editEditorRef.current)
-      console.log('  quillCreate.current:', !!quillCreate.current)
-      console.log('  quillEdit.current:', !!quillEdit.current)
-        
-      if (showModal === 'news' && createEditorRef.current && !quillCreate.current) {
-        console.log('📝 Initializing Quill for CREATE')
-        initQuill(createEditorRef.current, quillCreate)
-      }
-      if (showModal === 'edit-news' && editEditorRef.current && !quillEdit.current) {
-        console.log('✏️ Initializing Quill for EDIT')
-        console.log('📄 Content to load:', editingNews?.content?.substring(0, 100))
-        console.log('📊 Status:', editingNews?.status)
-        initQuill(editEditorRef.current, quillEdit, editingNews?.content || '')
-      }
-    }, [showModal, editingNews])
   }, [])
+  
+  // Initialize Quill editors when modals open
+  useEffect(() => {
+    console.log('🔍 Checking Quill initialization...')
+    console.log('  showModal:', showModal)
+    console.log('  createEditorRef.current:', !!createEditorRef.current)
+    console.log('  editEditorRef.current:', !!editEditorRef.current)
+    console.log('  quillCreate.current:', !!quillCreate.current)
+    console.log('  quillEdit.current:', !!quillEdit.current)
+      
+    if (showModal === 'news' && createEditorRef.current && !quillCreate.current) {
+      console.log('📝 Initializing Quill for CREATE')
+      initQuill(createEditorRef.current, quillCreate)
+    }
+    if (showModal === 'edit-news' && editEditorRef.current && !quillEdit.current) {
+      console.log('✏️ Initializing Quill for EDIT')
+      console.log('📄 Content to load:', editingNews?.content?.substring(0, 100))
+      console.log('📊 Status:', editingNews?.status)
+      initQuill(editEditorRef.current, quillEdit, editingNews?.content || '')
+    }
+  }, [showModal, editingNews])
   
   // Theme application - use 'dark' class for Tailwind compatibility
   useEffect(() => {
