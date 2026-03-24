@@ -25,7 +25,10 @@
   
   if (!CHANNEL_ID) {
     console.error('❌ NEWS WIDGET ERROR: channelId is required in NEWS_WIDGET_CONFIG');
-    document.getElementById(CONTAINER_ID).innerHTML = '<div class="news-widget-empty">⚠️ Widget not configured</div>';
+    const container = document.getElementById(CONTAINER_ID);
+    if (container) {
+      container.innerHTML = '<div class="news-widget-empty">⚠️ Widget not configured</div>';
+    }
     return;
   }
   
@@ -34,6 +37,27 @@
   let isLoading = false;
   let hasMore = true;
   let allNews = [];
+  
+  // Ensure container exists
+  function ensureContainer() {
+    let container = document.getElementById(CONTAINER_ID);
+    if (!container) {
+      container = document.createElement('div');
+      container.id = CONTAINER_ID;
+      container.className = 'news-widget-wrapper';
+      container.innerHTML = '<div id="news-widget-grid" class="news-widget-grid"></div>';
+      // Try to append to section or body
+      const section = document.querySelector('section#news') || document.querySelector('.section');
+      if (section) {
+        section.appendChild(container);
+      } else {
+        document.body.appendChild(container);
+      }
+    }
+    return container;
+  }
+  
+  ensureContainer();
   
   async function loadNews() {
     if (isLoading) return;
@@ -123,14 +147,6 @@
       // Redirect to news page
       window.location.href = NEWS_PAGE_URL + '?news=' + news.id;
     }
-  }
-  
-  // Create container if not exists
-  if (!document.getElementById(CONTAINER_ID)) {
-    const container = document.createElement('div');
-    container.id = CONTAINER_ID;
-    container.innerHTML = '<div id="news-widget-grid" class="news-widget-grid"></div>';
-    document.body.appendChild(container);
   }
   
   // Load news on init
