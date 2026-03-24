@@ -203,8 +203,13 @@
           const channelName = news.channels?.name || 'Без канала';
           const excerpt = news.excerpt || (news.content ? news.content.substring(0, 200) + '...' : '');
           
+          // Проверяем есть ли картинка
+          const hasImage = news.media && news.media.length > 0 && news.media[0].type === 'image';
+          const imageUrl = hasImage ? news.media[0].url : null;
+          
           return `
             <div class="news-item">
+              ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="News image" style="max-width: 100%; height: auto; border-radius: 12px; margin-bottom: 16px;" />` : ''}
               <div class="news-title">${escapeHtml(news.title)}</div>
               <div class="news-excerpt">${escapeHtml(excerpt)}</div>
               <div class="news-meta">
