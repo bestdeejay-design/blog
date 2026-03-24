@@ -88,7 +88,20 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
     setLoading(true)
     try {
       console.log('🚀 Submit to:', endpoint)
-      console.log('📦 Data:', formData instanceof FormData ? Object.fromEntries(formData) : formData)
+      console.log('📋 FormData type:', formData instanceof FormData ? 'FormData' : 'JSON')
+      
+      if (formData instanceof FormData) {
+        console.log('📦 FormData contents:')
+        for (let [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`)
+          } else {
+            console.log(`  ${key}: ${String(value).substring(0, 200)}`)
+          }
+        }
+      } else {
+        console.log('📦 JSON data:', formData)
+      }
       
       const response = await fetch(endpoint, {
         method: formData instanceof FormData ? 'POST' : 'PUT',
@@ -646,8 +659,20 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
         }}>
           <form onSubmit={(e) => {
             e.preventDefault()
+            console.log('🚀 Starting edit form submission...')
+            
             const fd = new FormData(e.currentTarget)
+            console.log('📦 Raw FormData from form:')
+            for (let [key, value] of fd.entries()) {
+              if (value instanceof File) {
+                console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`)
+              } else {
+                console.log(`  ${key}: ${String(value).substring(0, 100)}`)
+              }
+            }
+            
             const selectedChannels = Array.from(e.currentTarget.querySelectorAll('input[name="channel_ids"]:checked')).map((cb: any) => cb.value)
+            console.log('✅ Selected channels:', selectedChannels)
             
             // Создаем FormData для отправки
             const submitData = new FormData()
@@ -655,27 +680,37 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             submitData.append('title', fd.get('title') as string)
             submitData.append('content', fd.get('content') as string)
             submitData.append('status', fd.get('status') as string)
-            submitData.append('channel_ids', JSON.stringify(selectedChannels))
+            
+            const channelIdsJson = JSON.stringify(selectedChannels)
+            submitData.append('channel_ids', channelIdsJson)
+            console.log('📺 Channel IDs JSON:', channelIdsJson)
+            
             if (fd.get('update_created_at')) {
               submitData.append('update_created_at', 'on')
             }
-            // Картинка и видео уже в form data из input'ов
+            
+            // Картинка и видео
             const mediaImage = fd.get('media_image') as File
             const mediaVideo = fd.get('media_video') as string
+            
             if (mediaImage && mediaImage.size > 0) {
               submitData.append('media_image', mediaImage)
+              console.log('📷 Image file:', mediaImage.name, mediaImage.type, mediaImage.size, 'bytes')
+            } else {
+              console.log('📷 No image file selected')
             }
+            
             if (mediaVideo) {
               submitData.append('media_video', mediaVideo)
+              console.log('🎥 Video URL:', mediaVideo)
             }
             
-            console.log('📦 Submitting FormData with:', { 
-              hasImage: !!mediaImage && mediaImage.size > 0,
-              hasVideo: !!mediaVideo,
-              channelCount: selectedChannels.length 
-            })
+            console.log('📦 Final FormData prepared')
+            console.log('🚀 Calling handleSubmit with FormData...')
             
-            handleSubmit('/api/news/update', submitData, () => {})
+            handleSubmit('/api/news/update', submitData, () => {
+              console.log('✅ Success callback called')
+            })
           }} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Заголовок</label>
