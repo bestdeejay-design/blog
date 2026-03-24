@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Новости — АТМОСФЕРА</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --ink: #e2e8f0;
+      --muted: #94a3b8;
+      --primary: #06b6d4;
+      --primary-weak: #083344;
+      --ring: #0e7490;
+      --accent: #8b5cf6;
+      --accent-weak: #1e1b4b;
+      --radius: 16px;
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    .light {
+      --bg: #fcfdff;
+      --card: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --primary: #06b6b4;
+      --primary-weak: #e6fbfa;
+      --ring: #c7f8f6;
+      --accent: #7c3aed;
+      --accent-weak: #f3e8ff;
+      --border: #eef2f7;
+    }
+
+    .bright {
+      --bg: #e0f2fe;
+      --card: #ffffff;
+      --ink: #082f49;
+      --muted: #0c4a6e;
+      --primary: #0284c7;
+      --primary-weak: #bae6fd;
+      --ring: #7dd3fc;
+      --accent: #7c2d12;
+      --accent-weak: #fde68a;
+      --border: #bae6fd;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.65;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+    
+    /* Header */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    
+    .back-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+    
+    /* Main Layout */
+    .news-layout {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 30px;
+      padding: 40px 0;
+      min-height: calc(100vh - 200px);
+    }
+    
+    /* News List Panel */
+    .news-list-panel {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 24px;
+      overflow-y: auto;
+      max-height: calc(100vh - 280px);
+      position: sticky;
+      top: 100px;
+    }
+    
+    .news-list-header {
+      margin-bottom: 20px;
+    }
+    
+    .news-list-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    
+    .news-list-subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .news-list-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .news-list-item:hover {
+      transform: translateX(4px);
+      border-color: var(--primary);
+      background: var(--primary-weak);
+    }
+    
+    .news-list-item.active {
+      border-color: var(--primary);
+      background: var(--primary-weak);
+    }
+    
+    .news-list-item-image {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: var(--accent-weak);
+    }
+    
+    .news-list-item-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+      line-height: 1.4;
+    }
+    
+    .news-list-item-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    
+    .news-channel-badge {
+      background: var(--primary-weak);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+    
+    /* News Content Panel */
+    .news-content-panel {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 40px;
+      overflow-y: auto;
+      max-height: calc(100vh - 280px);
+    }
+    
+    .news-content-image {
+      width: 100%;
+      max-height: 500px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      margin-bottom: 30px;
+      background: var(--accent-weak);
+    }
+    
+    .news-content-header {
+      margin-bottom: 30px;
+    }
+    
+    .news-content-title {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 900;
+      line-height: 1.2;
+      margin: 0 0 16px;
+      color: var(--ink);
+    }
+    
+    .news-content-meta {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+    
+    .news-content-body {
+      font-size: 1.1rem;
+      line-height: 1.8;
+    }
+    
+    .news-content-body p {
+      margin-bottom: 20px;
+    }
+    
+    .loading-more {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    
+    .no-news {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 1024px) {
+      .news-layout {
+        grid-template-columns: 1fr;
+      }
+      
+      .news-list-panel {
+        position: relative;
+        top: 0;
+        max-height: none;
+      }
+      
+      .news-content-panel {
+        max-height: none;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .news-content-panel {
+        padding: 24px;
+      }
+      
+      .news-list-item-image {
+        height: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index.html" class="logo">АТМОСФЕРА</a>
+        <button onclick="window.location.href='index.html'" class="back-btn">← На главную</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="news-layout">
+      <!-- Left Panel: News List -->
+      <aside class="news-list-panel">
+        <div class="news-list-header">
+          <h1 class="news-list-title">Все новости</h1>
+          <p class="news-list-subtitle">Будьте в курсе последних событий</p>
+        </div>
+        <div id="news-list-container" class="news-list">
+          <!-- Новости загружаются сюда -->
+        </div>
+      </aside>
+
+      <!-- Right Panel: News Content -->
+      <article class="news-content-panel">
+        <div id="news-content-placeholder" style="text-align:center;padding:60px 20px;color:var(--muted);">
+          <p style="font-size:1.2rem;">Выберите новость из списка слева</p>
+          <p style="margin-top:12px;font-size:0.9rem;">или нажмите на первую новость</p>
+        </div>
+        <div id="news-content-container" style="display:none;">
+          <img id="news-content-image" class="news-content-image" src="" alt="" style="display:none;" />
+          <div class="news-content-header">
+            <h1 id="news-content-title" class="news-content-title"></h1>
+            <div class="news-content-meta">
+              <span id="news-content-channel" class="news-channel-badge"></span>
+              <span id="news-content-date"></span>
+            </div>
+          </div>
+          <div id="news-content-body" class="news-content-body"></div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <script>
+    const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
+    
+    let currentOffset = 0;
+    const limit = 20;
+    let isLoading = false;
+    let hasMore = true;
+    let allNews = [];
+    let selectedNewsId = null;
+    
+    // Get news ID from URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialNewsId = urlParams.get('news');
+    
+    async function loadNews() {
+      if (isLoading || !hasMore) return;
+      
+      isLoading = true;
+      const container = document.getElementById('news-list-container');
+      
+      try {
+        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}`);
+        const data = await response.json();
+        
+        if (!data.success || !data.news || data.news.length === 0) {
+          if (allNews.length === 0) {
+            container.innerHTML = '<div class="no-news">Новостей пока нет 📭</div>';
+          }
+          return;
+        }
+        
+        allNews = [...allNews, ...(data.news || [])];
+        hasMore = data.hasMore || false;
+        currentOffset += limit;
+        
+        renderNewsList();
+        
+        // Auto-select first news or news from URL
+        if (initialNewsId && !selectedNewsId && allNews.length > 0) {
+          const newsToSelect = allNews.find(n => n.id === initialNewsId);
+          if (newsToSelect) {
+            selectNews(newsToSelect);
+          } else if (allNews.length > 0 && !selectedNewsId) {
+            selectNews(allNews[0]);
+          }
+        } else if (allNews.length > 0 && !selectedNewsId) {
+          selectNews(allNews[0]);
+        }
+        
+        // Add "Load More" indicator
+        if (hasMore) {
+          const loader = document.createElement('div');
+          loader.id = 'loading-more-indicator';
+          loader.className = 'loading-more';
+          loader.textContent = '⏳ Загрузка...';
+          container.appendChild(loader);
+          
+          // Lazy load on scroll
+          const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMore) {
+              loader.remove();
+              loadNews();
+            }
+          }, { threshold: 0.1 });
+          
+          observer.observe(loader);
+        }
+      } catch (error) {
+        console.error('Error loading news:', error);
+        if (allNews.length === 0) {
+          container.innerHTML = '<div class="no-news">❌ Ошибка загрузки новостей</div>';
+        }
+      }
+      
+      isLoading = false;
+    }
+    
+    function renderNewsList() {
+      const container = document.getElementById('news-list-container');
+      const existingPlaceholder = container.querySelector('.no-news');
+      if (existingPlaceholder) existingPlaceholder.remove();
+      
+      const loader = document.getElementById('loading-more-indicator');
+      if (loader) loader.remove();
+      
+      allNews.forEach(news => {
+        const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const channelName = news.channels?.name || 'Без канала';
+        const imageUrl = news.thumbnail || null;
+        
+        const item = document.createElement('div');
+        item.className = 'news-list-item';
+        if (news.id === selectedNewsId) item.classList.add('active');
+        item.onclick = () => selectNews(news);
+        
+        let html = '';
+        if (imageUrl) {
+          html += `<img src="${escapeHtml(imageUrl)}" alt="" class="news-list-item-image" />`;
+        }
+        html += `<h3 class="news-list-item-title">${escapeHtml(news.title)}</h3>`;
+        html += '<div class="news-list-item-meta">';
+        html += `<span class="news-channel-badge">📺 ${escapeHtml(channelName)}</span>`;
+        html += `<span>📅 ${date}</span>`;
+        html += '</div>';
+        
+        item.innerHTML = html;
+        container.appendChild(item);
+      });
+    }
+    
+    window.selectNews = function(news) {
+      selectedNewsId = news.id;
+      
+      // Update URL
+      const newUrl = `${window.location.pathname}?news=${news.id}`;
+      window.history.pushState({ newsId: news.id }, '', newUrl);
+      
+      // Update active state in list
+      document.querySelectorAll('.news-list-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      event?.target?.closest('.news-list-item')?.classList.add('active');
+      
+      // Show content
+      const placeholder = document.getElementById('news-content-placeholder');
+      const contentContainer = document.getElementById('news-content-container');
+      const imageEl = document.getElementById('news-content-image');
+      const titleEl = document.getElementById('news-content-title');
+      const channelEl = document.getElementById('news-content-channel');
+      const dateEl = document.getElementById('news-content-date');
+      const bodyEl = document.getElementById('news-content-body');
+      
+      const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      const channelName = news.channels?.name || 'Без канала';
+      
+      titleEl.textContent = news.title;
+      channelEl.textContent = '📺 ' + channelName;
+      dateEl.textContent = '📅 ' + date;
+      
+      if (news.thumbnail) {
+        imageEl.src = escapeHtmlForAttr(news.thumbnail);
+        imageEl.style.display = 'block';
+      } else {
+        imageEl.style.display = 'none';
+      }
+      
+      const paragraphs = (news.content || '').split('\n\n').filter(p => p.trim());
+      bodyEl.innerHTML = paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+      
+      placeholder.style.display = 'none';
+      contentContainer.style.display = 'block';
+      
+      // Scroll to top of content panel on mobile
+      if (window.innerWidth <= 1024) {
+        document.querySelector('.news-content-panel').scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+    
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+    
+    function escapeHtmlForAttr(text) {
+      if (!text) return '';
+      return text.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+    
+    // Handle browser back/forward
+    window.addEventListener('popstate', (event) => {
+      if (event.state && event.state.newsId) {
+        const news = allNews.find(n => n.id === event.state.newsId);
+        if (news) selectNews(news);
+      }
+    });
+    
+    // Load news on page load
+    document.addEventListener('DOMContentLoaded', loadNews);
+  </script>
+</body>
+</html>

@@ -114,13 +114,13 @@
     const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
     
     let currentOffset = 0;
-    const limit = 12;
+    const limit = 6; // Показываем 6 новостей на главной
     let isLoading = false;
     let hasMore = true;
     let allNews = [];
     
     async function loadNews() {
-      if (isLoading || !hasMore) return;
+      if (isLoading) return;
       
       isLoading = true;
       const container = document.getElementById('news-grid-arental');
@@ -142,13 +142,12 @@
         
         renderNewsList(allNews);
         
-        // Добавляем кнопку "Показать еще" если есть новости
-        if (hasMore) {
-          const loadMoreBtn = document.createElement('div');
-          loadMoreBtn.id = 'news-load-more-arental';
-          loadMoreBtn.style.cssText = 'text-align:center;margin-top:24px;';
-          loadMoreBtn.innerHTML = '<button class="btn btn-ghost" onclick="loadMoreNews()">Показать еще новости</button>';
-          document.getElementById('news-widget-container').appendChild(loadMoreBtn);
+        // Добавляем кнопку "Все новости" если это главная страница
+        if (allNews.length > 0) {
+          const viewAllBtn = document.createElement('div');
+          viewAllBtn.style.cssText = 'text-align:center;margin-top:24px;';
+          viewAllBtn.innerHTML = '<a href="news.html" class="btn btn-primary" style="display:inline-block;text-decoration:none;">📰 Все новости →</a>';
+          document.getElementById('news-widget-container').appendChild(viewAllBtn);
         }
       } catch (error) {
         console.error('Error loading news:', error);
