@@ -646,8 +646,17 @@
       }
       
       if (hasHtmlTags) {
-        // Content already has HTML formatting from Quill - use as is
-        html += news.content || '';
+        // Content already has HTML formatting from Quill - clean up extra spacing
+        let cleanedContent = news.content || ''
+        
+        // Remove empty paragraphs that Quill adds for spacing
+        // Quill creates <p><br></p> for line breaks which cause huge margins
+        cleanedContent = cleanedContent
+          .replace(/<p><br\s*\/?>|<br\s*\/?>|<p>&nbsp;<\/p>|<p\s*>\s*<\/p>/gi, '')
+          .replace(/<p><\/p>/g, '');
+        
+        console.log('🧹 Cleaned content:', cleanedContent?.substring(0, 200) + '...');
+        html += cleanedContent;
       } else {
         // Plain text - split into paragraphs
         const paragraphs = (news.content || '').split('\n\n').filter(p => p.trim());
