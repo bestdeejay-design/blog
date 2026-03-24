@@ -634,6 +634,10 @@
       // Check if content contains HTML tags from Quill editor
       const hasHtmlTags = /<[a-z][\s\S]*>/i.test(news.content || '');
       
+      // DEBUG: Log to see what we're getting
+      console.log('📰 News content:', news.content?.substring(0, 200) + '...');
+      console.log('🔍 Has HTML tags:', hasHtmlTags);
+      
       let html = '';
       
       // Add thumbnail image if present
