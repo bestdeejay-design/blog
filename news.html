@@ -202,15 +202,6 @@
       max-height: calc(100vh - 280px);
     }
     
-    .news-content-image {
-      width: 100%;
-      max-height: 500px;
-      object-fit: cover;
-      border-radius: var(--radius);
-      margin-bottom: 30px;
-      background: var(--accent-weak);
-    }
-    
     .news-content-title {
       font-size: clamp(1.8rem, 4vw, 2.5rem);
       font-weight: 900;
@@ -326,11 +317,9 @@
           <p style="margin-top:12px;font-size:0.9rem;">или нажмите на первую новость</p>
         </div>
         <div id="news-content-container" style="display:none;">
-          <img id="news-content-image" class="news-content-image" src="" alt="" style="display:none;" />
           <div class="news-content-header">
             <h1 id="news-content-title" class="news-content-title"></h1>
             <div class="news-content-meta">
-              <span id="news-content-channel" class="news-channel-badge"></span>
               <span id="news-content-date"></span>
             </div>
           </div>
@@ -471,9 +460,7 @@
       // Show content
       const placeholder = document.getElementById('news-content-placeholder');
       const contentContainer = document.getElementById('news-content-container');
-      const imageEl = document.getElementById('news-content-image');
       const titleEl = document.getElementById('news-content-title');
-      const channelEl = document.getElementById('news-content-channel');
       const dateEl = document.getElementById('news-content-date');
       const bodyEl = document.getElementById('news-content-body');
       
@@ -484,15 +471,8 @@
       });
       
       // Убираем канал - мы уже на канале arental
-      // channelEl.textContent = '📺 ' + channelName;
+      titleEl.textContent = news.title;
       dateEl.textContent = '📅 ' + date;
-      
-      if (news.thumbnail) {
-        imageEl.src = escapeHtmlForAttr(news.thumbnail);
-        imageEl.style.display = 'block';
-      } else {
-        imageEl.style.display = 'none';
-      }
       
       const paragraphs = (news.content || '').split('\n\n').filter(p => p.trim());
       // Добавляем картинку в первый параграф если есть
