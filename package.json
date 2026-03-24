@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "postinstall": "npx tailwindcss init"
+    "lint": "next lint",
+    "postinstall": "npx tailwindcss init",
+    "setup:supabase": "echo 'Run supabase/schema.sql in your Supabase SQL Editor'"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
