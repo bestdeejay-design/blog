@@ -480,11 +480,8 @@
       });
       event?.target?.closest('.news-list-item')?.classList.add('active');
       
-      // Scroll to top of content panel
-      const contentPanel = document.querySelector('.news-content-panel');
-      if (contentPanel) {
-        contentPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      // Scroll to top of page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       
       // Update page title and meta tags for SEO
       updatePageMetadata(news);
