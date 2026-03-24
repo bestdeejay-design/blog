@@ -147,7 +147,11 @@
         if (allNews.length > 0) {
           const viewAllBtn = document.createElement('div');
           viewAllBtn.style.cssText = 'text-align:center;margin-top:24px;';
-          viewAllBtn.innerHTML = '<a href="news.html" class="btn btn-primary" style="display:inline-block;text-decoration:none;">📰 Все новости →</a>';
+          // Используем абсолютный путь для GitHub Pages
+          const newsPageUrl = window.location.pathname.includes('index-arental-with-news') 
+            ? 'news.html' 
+            : 'blog/news.html';
+          viewAllBtn.innerHTML = '<a href="' + newsPageUrl + '" class="btn btn-primary" style="display:inline-block;text-decoration:none;">📰 Все новости →</a>';
           document.getElementById('news-widget-container').appendChild(viewAllBtn);
         }
       } catch (error) {

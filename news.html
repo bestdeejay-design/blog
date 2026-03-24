@@ -211,10 +211,6 @@
       background: var(--accent-weak);
     }
     
-    .news-content-header {
-      margin-bottom: 30px;
-    }
-    
     .news-content-title {
       font-size: clamp(1.8rem, 4vw, 2.5rem);
       font-weight: 900;
@@ -239,6 +235,23 @@
     
     .news-content-body p {
       margin-bottom: 20px;
+    }
+    
+    /* Картинка в тексте новости - не более 50% с обтеканием */
+    .news-content-body img {
+      max-width: 50%;
+      height: auto;
+      border-radius: var(--radius);
+      margin: 0 0 20px 20px;
+      float: right;
+    }
+    
+    @media (max-width: 768px) {
+      .news-content-body img {
+        max-width: 100%;
+        float: none;
+        margin: 0 0 20px 0;
+      }
     }
     
     .loading-more {
@@ -483,7 +496,13 @@
       }
       
       const paragraphs = (news.content || '').split('\n\n').filter(p => p.trim());
-      bodyEl.innerHTML = paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+      // Добавляем картинку в первый параграф если есть
+      let html = '';
+      if (news.thumbnail && paragraphs.length > 0) {
+        html += '<img src="' + escapeHtmlForAttr(news.thumbnail) + '" alt="" />';
+      }
+      html += paragraphs.map(p => '<p>' + escapeHtml(p) + '</p>').join('');
+      bodyEl.innerHTML = html;
       
       placeholder.style.display = 'none';
       contentContainer.style.display = 'block';
