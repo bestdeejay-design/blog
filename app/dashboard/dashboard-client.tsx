@@ -678,18 +678,23 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                 {channels.length === 0 ? (
                   <p className="text-gray-500 text-sm">Каналов нет</p>
                 ) : (
-                  channels.map((channel: any) => (
-                    <label key={channel.id} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded transition-colors">
-                      <input
-                        type="checkbox"
-                        name="channel_ids"
-                        value={channel.id}
-                        defaultChecked={editingNews.channel_id === channel.id}
-                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{channel.name}</span>
-                    </label>
-                  ))
+                  channels.map((channel: any) => {
+                    // Проверяем есть ли этот канал в all_channels
+                    const isSelected = editingNews.all_channels?.some((ch: any) => ch.id === channel.id) ||
+                                      editingNews.channel_id === channel.id;
+                    return (
+                      <label key={channel.id} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded transition-colors">
+                        <input
+                          type="checkbox"
+                          name="channel_ids"
+                          value={channel.id}
+                          defaultChecked={isSelected}
+                          className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{channel.name}</span>
+                      </label>
+                    );
+                  })
                 )}
               </div>
             </div>
