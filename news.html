@@ -163,6 +163,39 @@
       transform: rotate(-45deg) translate(6px, -6px);
     }
     
+    /* Mobile Navigation Menu */
+    .mobile-nav-menu {
+      display: none;
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      z-index: 999;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    
+    .mobile-nav-menu a {
+      display: block;
+      padding: 12px 20px;
+      color: var(--muted);
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .mobile-nav-menu a:hover {
+      color: var(--ink);
+      background: var(--primary-weak);
+    }
+    
+    .mobile-nav-menu a.active {
+      color: var(--primary);
+      background: var(--primary-weak);
+      font-weight: 600;
+    }
+    
     /* Theme Switcher */
     .theme-switcher {
       position: fixed;
@@ -482,6 +515,13 @@
         <!-- Navigation menu -->
         <nav class="header-nav">
           <a href="index-arental-with-news.html" class="nav-link">Главная</a>
+          <a href="#services" class="nav-link">Услуги</a>
+          <a href="#channels" class="nav-link">Каналы</a>
+          <a href="#cases" class="nav-link">Кейсы</a>
+          <a href="#how" class="nav-link">Как работаем</a>
+          <a href="https://kodstudy.ru/" target="_blank" class="nav-link">Обучение</a>
+          <a href="/job" class="nav-link">Работа</a>
+          <a href="#contact" class="nav-link">Контакты</a>
           <a href="news.html" class="nav-link active">Новости</a>
         </nav>
       </div>
@@ -501,6 +541,19 @@
     <span></span>
     <span></span>
   </button>
+  
+  <!-- Mobile Navigation Menu -->
+  <div class="mobile-nav-menu" id="mobileNavMenu">
+    <a href="index-arental-with-news.html" onclick="toggleMobileMenu()">Главная</a>
+    <a href="#services" onclick="toggleMobileMenu()">Услуги</a>
+    <a href="#channels" onclick="toggleMobileMenu()">Каналы</a>
+    <a href="#cases" onclick="toggleMobileMenu()">Кейсы</a>
+    <a href="#how" onclick="toggleMobileMenu()">Как работаем</a>
+    <a href="https://kodstudy.ru/" target="_blank" onclick="toggleMobileMenu()">Обучение</a>
+    <a href="/job" onclick="toggleMobileMenu()">Работа</a>
+    <a href="#contact" onclick="toggleMobileMenu()">Контакты</a>
+    <a href="news.html" onclick="toggleMobileMenu()" class="active">Новости</a>
+  </div>
 
   <main class="container">
     <div class="news-layout">
@@ -798,18 +851,22 @@
     // Mobile menu toggle
     window.toggleMobileMenu = function() {
       const menuBtn = document.querySelector('.mobile-menu-btn');
-      const listPanel = document.querySelector('.news-list-panel');
+      const navMenu = document.getElementById('mobileNavMenu');
       menuBtn.classList.toggle('active');
-      listPanel.classList.toggle('active');
+      if (navMenu.style.display === 'block') {
+        navMenu.style.display = 'none';
+      } else {
+        navMenu.style.display = 'block';
+      }
     };
     
     // Close mobile menu when clicking outside
     document.addEventListener('click', (e) => {
       const menuBtn = document.querySelector('.mobile-menu-btn');
-      const listPanel = document.querySelector('.news-list-panel');
-      if (!menuBtn.contains(e.target) && !listPanel.contains(e.target)) {
+      const navMenu = document.getElementById('mobileNavMenu');
+      if (!menuBtn.contains(e.target) && !navMenu.contains(e.target)) {
         menuBtn.classList.remove('active');
-        listPanel.classList.remove('active');
+        navMenu.style.display = 'none';
       }
     });
     
