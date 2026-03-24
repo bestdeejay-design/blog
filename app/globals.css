@@ -214,3 +214,24 @@ body:not(.light) .ql-snow .ql-fill {
 .hover-text-primary:hover {
   color: var(--text-primary);
 }
+
+/* Status badges */
+.badge-success {
+  background-color: rgba(63, 185, 80, 0.2);
+  color: var(--accent-success);
+}
+
+.badge-warning {
+  background-color: rgba(210, 153, 34, 0.2);
+  color: var(--accent-warning);
+}
+
+.badge-gray {
+  background-color: rgba(139, 148, 158, 0.2);
+  color: var(--text-secondary);
+}
+
+.badge-blue {
+  background-color: rgba(88, 166, 255, 0.2);
+  color: var(--accent-primary);
+}

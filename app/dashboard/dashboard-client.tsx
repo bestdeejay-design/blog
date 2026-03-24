@@ -16,8 +16,15 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   const [errorModal, setErrorModal] = useState<{show: boolean, message: string, details?: string}>({ show: false, message: '', details: '' })
   const [successModal, setSuccessModal] = useState<{show: boolean, message: string}>({ show: false, message: '' })
   
-  // Theme management
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  // Theme management - read from localStorage synchronously to prevent flash
+  const getInitialTheme = (): 'dark' | 'light' => {
+    if (typeof window === 'undefined') return 'dark'
+    const saved = localStorage.getItem('dashboard-theme')
+    console.log('🎨 Initial theme load:', saved)
+    return (saved === 'light' || saved === 'dark') ? saved as 'dark' | 'light' : 'dark'
+  }
+  
+  const [theme, setTheme] = useState<'dark' | 'light'>(getInitialTheme)
   
   // Фильтры
   const [filterChannel, setFilterChannel] = useState<string>('all')
@@ -39,13 +46,26 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
     loadNews()
     
     // Initialize Quill editors when modals open
-    if (showModal === 'news' && createEditorRef.current && !quillCreate.current) {
-      initQuill(createEditorRef.current, quillCreate)
-    }
-    if (showModal === 'edit-news' && editEditorRef.current && !quillEdit.current) {
-      initQuill(editEditorRef.current, quillEdit, editingNews?.content)
-    }
-  }, [initialChannels, initialUsers, showModal, editingNews])
+    useEffect(() => {
+      console.log('🔍 Checking Quill initialization...')
+      console.log('  showModal:', showModal)
+      console.log('  createEditorRef.current:', !!createEditorRef.current)
+      console.log('  editEditorRef.current:', !!editEditorRef.current)
+      console.log('  quillCreate.current:', !!quillCreate.current)
+      console.log('  quillEdit.current:', !!quillEdit.current)
+        
+      if (showModal === 'news' && createEditorRef.current && !quillCreate.current) {
+        console.log('📝 Initializing Quill for CREATE')
+        initQuill(createEditorRef.current, quillCreate)
+      }
+      if (showModal === 'edit-news' && editEditorRef.current && !quillEdit.current) {
+        console.log('✏️ Initializing Quill for EDIT')
+        console.log('📄 Content to load:', editingNews?.content?.substring(0, 100))
+        console.log('📊 Status:', editingNews?.status)
+        initQuill(editEditorRef.current, quillEdit, editingNews?.content || '')
+      }
+    }, [showModal, editingNews])
+  }, [])
   
   // Theme application - use 'dark' class for Tailwind compatibility
   useEffect(() => {
@@ -232,6 +252,10 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
         if (endpoint === '/api/news/create') {
           console.log('🔄 Reloading page to show new news...')
         }
+        // Сохраняем текущую тему перед перезагрузкой
+        const currentTheme = theme
+        console.log('💾 Saving theme before reload:', currentTheme)
+        localStorage.setItem('dashboard-theme', currentTheme)
         setTimeout(() => {
           window.location.reload()
         }, 1000)
@@ -263,20 +287,20 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-primary">
       {/* Header */}
-      <nav className="bg-white dark:bg-gray-800 shadow-lg">
+      <nav className="bg-secondary shadow-lg border-b border-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📊 Админ-панель</h1>
+              <h1 className="text-2xl font-bold text-primary">📊 Админ-панель</h1>
               <div className="flex space-x-4">
                 <button
                   onClick={() => setActiveTab('news')}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeTab === 'news'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-accent-primary text-white'
+                      : 'text-secondary hover-bg-tertiary'
                   }`}
                 >
                   📰 Новости
@@ -286,7 +310,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeTab === 'analytics'
                       ? 'bg-indigo-600 text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-secondary hover-bg-tertiary'
                   }`}
                 >
                   📊 Аналитика
@@ -296,7 +320,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeTab === 'channels'
                       ? 'bg-green-600 text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-secondary hover-bg-tertiary'
                   }`}
                 >
                   📺 Каналы
@@ -306,7 +330,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeTab === 'users'
                       ? 'bg-purple-600 text-white'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-secondary hover-bg-tertiary'
                   }`}
                 >
                   👥 Пользователи
@@ -314,7 +338,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700 dark:text-gray-300">
+              <span className="text-secondary">
                 👤 {String(payload.username)} ({String(payload.role)})
               </span>
               
@@ -383,54 +407,54 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
         {activeTab === 'news' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">📰 Новости</h2>
+              <h2 className="text-2xl font-bold text-primary">📰 Новости</h2>
               <button
                 onClick={() => setShowModal('news')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2"
+                className="bg-accent-primary hover:opacity-90 text-white px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2"
               >
                 <span>➕</span><span>Добавить новость</span>
               </button>
             </div>
             
             {/* Фильтры */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+            <div className="bg-secondary rounded-xl shadow p-4 border border-primary">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">📺 Канал:</label>
+                  <label className="block text-sm font-medium mb-1 text-secondary">📺 Канал:</label>
                   <select 
                     value={filterChannel}
                     onChange={(e) => setFilterChannel(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                    className="w-full px-3 py-2 border border-primary rounded-lg bg-primary text-secondary focus:outline-none focus:border-accent-primary"
                   >
-                    <option value="all">Все каналы</option>
+                    <option value="all" className="bg-primary">Все каналы</option>
                     {channels.map((channel: any) => (
-                      <option key={channel.id} value={channel.id}>{channel.name}</option>
+                      <option key={channel.id} value={channel.id} className="bg-primary">{channel.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">👤 Автор:</label>
+                  <label className="block text-sm font-medium mb-1 text-secondary">👤 Автор:</label>
                   <select 
                     value={filterAuthor}
                     onChange={(e) => setFilterAuthor(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                    className="w-full px-3 py-2 border border-primary rounded-lg bg-primary text-secondary focus:outline-none focus:border-accent-primary"
                   >
-                    <option value="all">Все авторы</option>
+                    <option value="all" className="bg-primary">Все авторы</option>
                     {users.map((user: any) => (
-                      <option key={user.id} value={user.id}>{user.full_name || user.username}</option>
+                      <option key={user.id} value={user.id} className="bg-primary">{user.full_name || user.username}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">📋 Статус:</label>
+                  <label className="block text-sm font-medium mb-1 text-secondary">📋 Статус:</label>
                   <select 
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+                    className="w-full px-3 py-2 border border-primary rounded-lg bg-primary text-secondary focus:outline-none focus:border-accent-primary"
                   >
-                    <option value="all">Все статусы</option>
-                    <option value="published">✅ Опубликовано</option>
-                    <option value="draft">✏️ Черновик</option>
+                    <option value="all" className="bg-primary">Все статусы</option>
+                    <option value="published" className="bg-primary">✅ Опубликовано</option>
+                    <option value="draft" className="bg-primary">✏️ Черновик</option>
                   </select>
                 </div>
               </div>
@@ -441,7 +465,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                     setFilterAuthor('all')
                     setFilterStatus('all')
                   }}
-                  className="mt-3 text-sm text-blue-600 hover:text-blue-700"
+                  className="mt-3 text-sm text-accent-primary hover:text-accent-primary/80"
                 >
                   🔄 Сбросить фильтры
                 </button>
@@ -450,7 +474,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             
             <div className="grid gap-4">
               {getFilteredNews().length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Новостей нет</p>
+                <p className="text-secondary text-center py-8">Новостей нет</p>
               ) : (
                 getFilteredNews().map((item: any) => {
                   // Get first image from media array
@@ -459,7 +483,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                     : null;
                   
                   return (
-                    <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex gap-4">
+                    <div key={item.id} className="bg-secondary rounded-xl shadow p-4 flex gap-4 border border-primary">
                       {/* Thumbnail */}
                       <div className="flex-shrink-0">
                         {thumbnail ? (
@@ -469,7 +493,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                             className="w-32 h-32 object-cover rounded-lg"
                           />
                         ) : (
-                          <div className="w-32 h-32 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center text-4xl">
+                          <div className="w-32 h-32 bg-tertiary rounded-lg flex items-center justify-center text-4xl">
                             📰
                           </div>
                         )}
@@ -480,7 +504,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                               setEditingNews(item)
                               setShowModal('edit-news')
                             }} 
-                            className="text-blue-600 hover:text-blue-700 p-1.5 hover:bg-blue-50 dark:hover:bg-gray-700 rounded transition-all text-sm"
+                            className="text-accent-primary hover:text-accent-primary/80 p-1.5 hover-bg-tertiary rounded transition-all text-sm"
                             title="Редактировать"
                           >
                             ✏️
@@ -513,7 +537,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                                 }
                               }
                             }} 
-                            className="text-red-600 hover:text-red-700 p-1.5 hover:bg-red-50 dark:hover:bg-gray-700 rounded transition-all text-sm" 
+                            className="text-accent-danger hover:text-red-500 p-1.5 hover-bg-tertiary rounded transition-all text-sm" 
                             title="Переместить в черновики"
                           >
                             🗑️
@@ -525,9 +549,9 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 mb-2 flex-wrap">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            item.status === 'published' ? 'bg-green-100 text-green-800' :
-                            item.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
+                            item.status === 'published' ? 'badge-success' :
+                            item.status === 'draft' ? 'badge-warning' :
+                            'badge-gray'
                           }`}>
                             {item.status === 'published' ? '✅ Опубликовано' :
                              item.status === 'draft' ? '✏️ Черновик' : item.status}
@@ -535,22 +559,22 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                           <div className="flex gap-1 flex-wrap">
                             {item.all_channels && item.all_channels.length > 0 ? (
                               item.all_channels.map((ch: any) => (
-                                <span key={ch.id} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                <span key={ch.id} className="text-xs badge-blue px-2 py-1 rounded">
                                   📺 {ch.name}
                                 </span>
                               ))
                             ) : (
-                              <span className="text-xs text-gray-500">📺 Нет каналов</span>
+                              <span className="text-xs text-secondary">📺 Нет каналов</span>
                             )}
                           </div>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate">
+                        <h3 className="text-xl font-bold text-primary mb-2 truncate">
                           {item.title}
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
+                        <p className="text-secondary text-sm mb-3 line-clamp-2">
                           {item.excerpt || item.content?.replace(/<[^>]*>/g, '').substring(0, 200) + '...'}
                         </p>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-4 text-sm text-secondary">
                           <span>👤 {item.user_profiles?.full_name || item.user_profiles?.username || 'Неизвестно'}</span>
                           <span>📅 {new Date(item.created_at).toLocaleDateString('ru-RU')}</span>
                           {item.published_at && (
@@ -796,78 +820,78 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             handleSubmit('/api/news/create', fd, () => {})
           }} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Заголовок</label>
-              <input type="text" name="title" required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all" placeholder="Введите заголовок" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Заголовок</label>
+              <input type="text" name="title" required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all placeholder-secondary" placeholder="Введите заголовок" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Краткое описание (excerpt)</label>
+              <label className="block text-sm font-medium mb-1 text-secondary">Краткое описание (excerpt)</label>
               <textarea 
                 name="excerpt" 
                 rows={2} 
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" 
+                className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all resize-none placeholder-secondary" 
                 placeholder="Краткая выжимка из новости (2-3 предложения). Используется для SEO и превью." 
                 maxLength={300}
               />
-              <p className="text-xs text-gray-500 mt-1">Максимум 300 символов. Будет использоваться в meta description и для превью.</p>
+              <p className="text-xs text-secondary mt-1">Максимум 300 символов. Будет использоваться в meta description и для превью.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Текст новости</label>
-              <div ref={createEditorRef} className="border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 min-h-[200px]" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Текст новости</label>
+              <div ref={createEditorRef} className="border border-primary rounded-lg bg-secondary min-h-[200px]" />
               <input type="hidden" name="content" id="create-content-field" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">📷 Медиа</label>
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-3 bg-white dark:bg-gray-700">
+              <label className="block text-sm font-medium mb-2 text-secondary">📷 Медиа</label>
+              <div className="border border-primary rounded-lg p-4 space-y-3 bg-secondary">
                 <div className="space-y-2">
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Загрузить картинку</label>
+                  <label className="block text-xs font-medium text-secondary">Загрузить картинку</label>
                   <input 
                     type="file" 
                     name="media_image" 
                     accept="image/*"
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-600 dark:file:text-gray-300"
+                    className="w-full text-sm text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent-primary/10 file:text-accent-primary hover:file:bg-accent-primary/20"
                   />
-                  <p className="text-xs text-gray-500">Картинка загрузится в Supabase Storage</p>
+                  <p className="text-xs text-secondary">Картинка загрузится в Supabase Storage</p>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">🎥 Ссылка на видео</label>
+                  <label className="block text-xs font-medium text-secondary">🎥 Ссылка на видео</label>
                   <input 
                     type="url" 
                     name="media_video" 
                     placeholder="https://youtube.com/watch?v=... или https://rutube.ru/video/..."
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 border border-primary rounded-lg text-sm bg-primary text-secondary placeholder-secondary"
                   />
-                  <p className="text-xs text-gray-500">YouTube, RuTube, VK Видео</p>
+                  <p className="text-xs text-secondary">YouTube, RuTube, VK Видео</p>
                 </div>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Каналы</label>
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto bg-white dark:bg-gray-700">
+              <label className="block text-sm font-medium mb-2 text-secondary">Каналы</label>
+              <div className="border border-primary rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto bg-secondary">
                 {channels.length === 0 ? (
-                  <p className="text-gray-500 text-sm">Каналов нет</p>
+                  <p className="text-secondary text-sm">Каналов нет</p>
                 ) : (
                   channels.map((channel: any) => (
-                    <label key={channel.id} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded transition-colors">
+                    <label key={channel.id} className="flex items-center space-x-3 cursor-pointer p-2 hover-bg-tertiary rounded transition-colors">
                       <input
                         type="checkbox"
                         name="channel_ids"
                         value={channel.id}
-                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="w-4 h-4 rounded accent-accent-primary focus:ring-accent-primary border-primary"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{channel.name}</span>
+                      <span className="text-sm text-primary font-medium">{channel.name}</span>
                     </label>
                   ))
                 )}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Статус</label>
-              <select name="status" defaultValue="draft" className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all">
-                <option value="draft">✏️ Черновик</option>
-                <option value="published">✅ Опубликовано</option>
+              <label className="block text-sm font-medium mb-1 text-secondary">Статус</label>
+              <select name="status" defaultValue="draft" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all">
+                <option value="draft" className="bg-primary">✏️ Черновик</option>
+                <option value="published" className="bg-primary">✅ Опубликовано</option>
               </select>
             </div>
-            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+            <button type="submit" disabled={loading} className="w-full bg-accent-primary hover:opacity-90 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
               {loading ? '⏳ Создание...' : '✅ Создать новость'}
             </button>
           </form>
@@ -955,32 +979,32 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             })
           }} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Заголовок</label>
-              <input type="text" name="title" defaultValue={editingNews.title} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Заголовок</label>
+              <input type="text" name="title" defaultValue={editingNews.title} required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Краткое описание (excerpt)</label>
+              <label className="block text-sm font-medium mb-1 text-secondary">Краткое описание (excerpt)</label>
               <textarea 
                 name="excerpt" 
                 rows={2} 
                 defaultValue={editingNews.excerpt || ''}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" 
+                className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all resize-none placeholder-secondary" 
                 placeholder="Краткая выжимка из новости (2-3 предложения)" 
                 maxLength={300}
               />
-              <p className="text-xs text-gray-500 mt-1">Максимум 300 символов</p>
+              <p className="text-xs text-secondary mt-1">Максимум 300 символов</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Текст новости</label>
-              <div ref={editEditorRef} className="border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 min-h-[200px]" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Текст новости</label>
+              <div ref={editEditorRef} className="border border-primary rounded-lg bg-secondary min-h-[200px]" />
               <input type="hidden" name="content" id="edit-content-field" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">📷 Медиа (существующее)</label>
+              <label className="block text-sm font-medium mb-2 text-secondary">📷 Медиа (существующее)</label>
               {editingNews.media && editingNews.media.length > 0 ? (
                 <div className="mb-3 space-y-2">
                   {editingNews.media.map((m: any, i: number) => (
-                    <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-600 rounded text-sm">
+                    <div key={i} className="flex items-center gap-2 p-2 bg-tertiary rounded text-sm text-primary">
                       {m.type === 'image' && <span>📷 Картинка</span>}
                       {m.type === 'youtube' && <span>🎥 YouTube</span>}
                       {m.type === 'rutube' && <span>🎥 RuTube</span>}
@@ -989,49 +1013,49 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500 mb-3">Нет медиа</p>
+                <p className="text-sm text-secondary mb-3">Нет медиа</p>
               )}
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-3 bg-white dark:bg-gray-700">
+              <div className="border border-primary rounded-lg p-4 space-y-3 bg-secondary">
                 <div className="space-y-2">
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Загрузить новую картинку</label>
+                  <label className="block text-xs font-medium text-secondary">Загрузить новую картинку</label>
                   <input 
                     type="file" 
                     name="media_image" 
                     accept="image/*"
-                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-600 dark:file:text-gray-300"
+                    className="w-full text-sm text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent-primary/10 file:text-accent-primary hover:file:bg-accent-primary/20"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">🎥 Ссылка на новое видео</label>
+                  <label className="block text-xs font-medium text-secondary">🎥 Ссылка на новое видео</label>
                   <input 
                     type="url" 
                     name="media_video" 
                     placeholder="https://youtube.com/watch?v=..."
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 border border-primary rounded-lg text-sm bg-primary text-secondary placeholder-secondary"
                   />
                 </div>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Каналы</label>
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto bg-white dark:bg-gray-700">
+              <label className="block text-sm font-medium mb-2 text-secondary">Каналы</label>
+              <div className="border border-primary rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto bg-secondary">
                 {channels.length === 0 ? (
-                  <p className="text-gray-500 text-sm">Каналов нет</p>
+                  <p className="text-secondary text-sm">Каналов нет</p>
                 ) : (
                   channels.map((channel: any) => {
                     // Проверяем есть ли этот канал в all_channels
                     const isSelected = editingNews.all_channels?.some((ch: any) => ch.id === channel.id) ||
                                       editingNews.channel_id === channel.id;
                     return (
-                      <label key={`${editingNews.id}-${channel.id}`} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded transition-colors">
+                      <label key={`${editingNews.id}-${channel.id}`} className="flex items-center space-x-3 cursor-pointer p-2 hover-bg-tertiary rounded transition-colors">
                         <input
                           type="checkbox"
                           name="channel_ids"
                           value={channel.id}
                           defaultChecked={isSelected}
-                          className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                          className="w-4 h-4 rounded accent-accent-primary focus:ring-accent-primary border-primary"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{channel.name}</span>
+                        <span className="text-sm text-primary font-medium">{channel.name}</span>
                       </label>
                     );
                   })
@@ -1039,29 +1063,29 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Статус</label>
-              <select name="status" defaultValue={editingNews.status} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all">
-                <option value="draft">✏️ Черновик</option>
-                <option value="published">✅ Опубликовано</option>
+              <label className="block text-sm font-medium mb-1 text-secondary">Статус</label>
+              <select name="status" defaultValue={editingNews.status} className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all">
+                <option value="draft" className="bg-primary">✏️ Черновик</option>
+                <option value="published" className="bg-primary">✅ Опубликовано</option>
               </select>
             </div>
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
               <label className="flex items-start space-x-3 cursor-pointer">
                 <input 
                   type="checkbox" 
                   name="update_created_at"
-                  className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 mt-0.5"
+                  className="w-5 h-5 rounded accent-accent-primary focus:ring-accent-primary border-primary mt-0.5"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">📅 Обновить дату создания</span>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  <span className="text-sm font-medium text-primary">📅 Обновить дату создания</span>
+                  <p className="text-xs text-secondary mt-1">
                     Если отмечено, дата создания изменится на текущую (как будто новость создана сейчас). 
                     Используйте для поднятия новости вверх ленты.
                   </p>
                 </div>
               </label>
             </div>
-            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+            <button type="submit" disabled={loading} className="w-full bg-accent-primary hover:opacity-90 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
               {loading ? '⏳ Сохранение...' : '💾 Сохранить изменения'}
             </button>
           </form>
@@ -1075,12 +1099,12 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             handleSubmit('/api/channels/create', fd, () => {})
           }} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Название</label>
-              <input type="text" name="name" required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Введите название" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Название</label>
+              <input type="text" name="name" required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" placeholder="Введите название" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Ключ (slug)</label>
-              <input type="text" name="slug" required pattern="[a-z0-9-]+" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="main-news" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Ключ (slug)</label>
+              <input type="text" name="slug" required pattern="[a-z0-9-]+" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" placeholder="main-news" />
             </div>
             <button type="submit" disabled={loading} className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
               {loading ? '⏳ Создание...' : '✅ Создать канал'}
@@ -1096,23 +1120,23 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             handleSubmit('/api/users/create', fd, () => {})
           }} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Логин</label>
-              <input type="text" name="username" required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Логин</label>
+              <input type="text" name="username" required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Пароль</label>
-              <input type="password" name="password" required minLength={6} className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Пароль</label>
+              <input type="password" name="password" required minLength={6} className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Имя</label>
-              <input type="text" name="full_name" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Имя</label>
+              <input type="text" name="full_name" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Роль</label>
-              <select name="role" defaultValue="editor" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
-                <option value="editor">Редактор</option>
-                <option value="admin">Админ</option>
-                <option value="super_admin">Супер-админ</option>
+              <label className="block text-sm font-medium mb-1 text-secondary">Роль</label>
+              <select name="role" defaultValue="editor" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all">
+                <option value="editor" className="bg-primary">Редактор</option>
+                <option value="admin" className="bg-primary">Админ</option>
+                <option value="super_admin" className="bg-primary">Супер-админ</option>
               </select>
             </div>
             <button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
@@ -1139,26 +1163,26 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             handleSubmit('/api/users/update', data, () => {})
           }} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Логин</label>
-              <input type="text" name="username" defaultValue={editingUser.username} required className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Логин</label>
+              <input type="text" name="username" defaultValue={editingUser.username} required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Пароль</label>
-              <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять" className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Пароль</label>
+              <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Имя</label>
-              <input type="text" name="full_name" defaultValue={editingUser.full_name || ''} className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+              <label className="block text-sm font-medium mb-1 text-secondary">Имя</label>
+              <input type="text" name="full_name" defaultValue={editingUser.full_name || ''} className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Роль</label>
-              <select name="role" defaultValue={editingUser.role} className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
-                <option value="editor">Редактор</option>
-                <option value="admin">Админ</option>
-                <option value="super_admin">Супер-админ</option>
+              <label className="block text-sm font-medium mb-1 text-secondary">Роль</label>
+              <select name="role" defaultValue={editingUser.role} className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all">
+                <option value="editor" className="bg-primary">Редактор</option>
+                <option value="admin" className="bg-primary">Админ</option>
+                <option value="super_admin" className="bg-primary">Супер-админ</option>
               </select>
             </div>
-            <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
+            <button type="submit" disabled={loading} className="w-full bg-accent-primary hover:opacity-90 text-white py-3 rounded-lg font-medium disabled:opacity-50">
               {loading ? '⏳ Сохранение...' : '💾 Сохранить изменения'}
             </button>
           </form>
@@ -1172,8 +1196,8 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
           onClose={() => setErrorModal({ show: false, message: '', details: '' })}
         >
           <div className="space-y-4">
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <p className="text-red-800 dark:text-red-200 font-medium">{errorModal.message}</p>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+              <p className="text-accent-danger font-medium">{errorModal.message}</p>
             </div>
             
             {errorModal.details && (
