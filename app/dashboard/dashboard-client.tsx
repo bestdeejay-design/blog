@@ -104,7 +104,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
       }
       
       const response = await fetch(endpoint, {
-        method: 'PUT', // Всегда используем PUT для update
+        method: endpoint === '/api/news/create' ? 'POST' : 'PUT', // POST для создания, PUT для обновления
         body: formData instanceof FormData ? formData : JSON.stringify(formData),
         // Для FormData НЕ передаём заголовок Content-Type - браузер сам установит multipart/form-data с boundary
         headers: formData instanceof FormData ? {} : { 'Content-Type': 'application/json' }
