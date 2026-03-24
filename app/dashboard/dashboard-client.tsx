@@ -284,9 +284,17 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                             {item.status === 'published' ? '✅ Опубликовано' :
                              item.status === 'draft' ? '✏️ Черновик' : item.status}
                           </span>
-                          <span className="text-xs text-gray-500">
-                            📺 {item.channels?.name || 'Не указан'}
-                          </span>
+                          <div className="flex gap-1 flex-wrap">
+                            {item.all_channels && item.all_channels.length > 0 ? (
+                              item.all_channels.map((ch: any) => (
+                                <span key={ch.id} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                  📺 {ch.name}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-gray-500">📺 Нет каналов</span>
+                            )}
+                          </div>
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                           {item.title}

@@ -6,15 +6,11 @@ export async function GET() {
     console.log('Fetching all news...')
     const supabaseAdmin = getSupabaseAdmin()
     
+    // Сначала получаем новости
     const { data: news, error } = await supabaseAdmin
       .from('news')
       .select(`
         *,
-        channels (
-          id,
-          name,
-          slug
-        ),
         user_profiles (
           id,
           username,
@@ -28,8 +24,34 @@ export async function GET() {
       throw error
     }
     
-    console.log(`✅ Fetched ${news?.length || 0} news items`)
-    return NextResponse.json({ success: true, news: news || [] })
+    // Для каждой новости получаем каналы через news_channels
+    const newsWithChannels = await Promise.all(
+      (news || []).map(async (newsItem) => {
+        const { data: newsChannels } = await supabaseAdmin
+          .from('news_channels')
+          .select(`
+            channel_id,
+            channels (
+              id,
+              name,
+              slug
+            )
+          `)
+          .eq('news_id', newsItem.id)
+        
+        // Преобразуем в массив каналов (для обратной совместимости)
+        const channels = (newsChannels || []).map(nc => nc.channels)
+        
+        return {
+          ...newsItem,
+          channels: channels.length > 0 ? channels[0] : null, // Первый канал для совместимости
+          all_channels: channels // Все каналы
+        }
+      })
+    )
+    
+    console.log(`✅ Fetched ${newsWithChannels.length} news items`)
+    return NextResponse.json({ success: true, news: newsWithChannels })
   } catch (error: any) {
     console.error('Get news error:', error)
     return NextResponse.json(
