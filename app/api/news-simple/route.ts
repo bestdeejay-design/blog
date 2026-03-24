@@ -13,15 +13,37 @@ export async function GET(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
+    let newsIds = null
+    
+    // Если указан channel_id - находим новости через junction table
+    if (channelId) {
+      const { data: newsChannelData } = await supabase
+        .from('news_channels')
+        .select('news_id')
+        .eq('channel_id', channelId)
+      
+      if (newsChannelData && newsChannelData.length > 0) {
+        newsIds = newsChannelData.map(nc => nc.news_id)
+      } else {
+        // Нет новостей для этого канала
+        return NextResponse.json({ 
+          success: true, 
+          news: [],
+          hasMore: false,
+          total: 0
+        })
+      }
+    }
+    
     // Максимально простой запрос - только news с media
     let query = supabase
       .from('news')
       .select('id,title,content,excerpt,slug,status,published_at,channel_id,media,created_at,updated_at', { count: 'exact' })
       .eq('status', 'published')
     
-    // Если указан channel_id - фильтруем по нему
-    if (channelId) {
-      query = query.eq('channel_id', channelId)
+    // Фильтруем по найденным news_id
+    if (newsIds) {
+      query = query.in('id', newsIds)
     }
     
     query = query.order('published_at', { ascending: false, nullsFirst: false })
