@@ -1,6 +1,6 @@
 /* 
   UNIVERSAL NEWS WIDGET
-  
+/* 
   Usage: Set NEWS_WIDGET_CONFIG before including this file
   
   Example:
@@ -11,7 +11,8 @@
       containerId: 'news-widget-container'
     };
   </script>
-  <link rel="stylesheet" href="news-widget.css">
+  <!-- Подключаем стили с повышенной специфичностью -->
+  <link rel="stylesheet" href="news-widget-override.css">
   <script src="news-widget.js"></script>
 */
 
