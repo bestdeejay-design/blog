@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Lock, User as UserIcon } from '../../lib/icons'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -51,27 +52,37 @@ export default function LoginPage() {
               <label htmlFor="username" className="sr-only">
                 Логин
               </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                placeholder="Логин"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <UserIcon size={18} className="text-gray-400" />
+                </div>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                  className="appearance-none rounded-none relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  placeholder="Логин"
+                />
+              </div>
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
                 Пароль
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                placeholder="Пароль"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  className="appearance-none rounded-none relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  placeholder="Пароль"
+                />
+              </div>
             </div>
           </div>
 
