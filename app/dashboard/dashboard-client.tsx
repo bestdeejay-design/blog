@@ -88,7 +88,21 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
         headers: formData instanceof FormData ? {} : { 'Content-Type': 'application/json' }
       })
       
-      const result = await response.json()
+      console.log('📥 Response status:', response.status)
+      console.log('📥 Response headers:', response.headers.get('content-type'))
+      
+      // Проверяем что ответ JSON
+      const contentType = response.headers.get('content-type')
+      let result
+      if (contentType && contentType.includes('application/json')) {
+        result = await response.json()
+      } else {
+        // Пытаемся получить текст ошибки
+        const text = await response.text()
+        console.error('❌ Non-JSON response:', text.substring(0, 500))
+        throw new Error('Сервер вернул некорректный ответ: ' + text.substring(0, 100))
+      }
+      
       console.log('📥 Response:', response.status, result)
       
       if (response.ok) {
