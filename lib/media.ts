@@ -18,7 +18,7 @@ export async function uploadImage(file: File, newsId?: string) {
     const filePath = `public/${fileName}`
     
     const { data, error } = await supabaseAdmin.storage
-      .from('news-media')
+      .from('blog-media')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
@@ -28,7 +28,7 @@ export async function uploadImage(file: File, newsId?: string) {
     
     // Получаем публичный URL
     const { data: { publicUrl } } = supabaseAdmin.storage
-      .from('news-media')
+      .from('blog-media')
       .getPublicUrl(filePath)
     
     return { success: true, url: publicUrl }

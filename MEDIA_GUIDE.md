@@ -116,7 +116,7 @@ add-media-support.sql     # SQL для обновления БД
 ## 🔧 Технические детали:
 
 ### Загрузка изображений:
-- **Хранилище:** Supabase Storage bucket `news-media`
+- **Хранилище:** Supabase Storage bucket `blog-media`
 - **Путь:** `public/{news-id}-{timestamp}.{ext}`
 - **Форматы:** JPG, PNG, GIF, WebP
 - **Лимит:** 10MB на файл (настройка Supabase)
