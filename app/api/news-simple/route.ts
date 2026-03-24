@@ -31,17 +31,30 @@ export async function GET(request: Request) {
     const newsWithThumbnails = (data || []).map(news => {
       let thumbnail = null
       
-      if (news.media && news.media.length > 0) {
-        const firstMedia = news.media[0]
-        if (firstMedia.type === 'image') {
-          // Для картинок - используем оригинал как thumbnail
-          thumbnail = firstMedia.url
-        } else if (['youtube', 'rutube', 'vk'].includes(firstMedia.type)) {
-          // Для видео - генерируем заглушку или берем poster
-          if (firstMedia.type === 'youtube') {
-            thumbnail = `https://img.youtube.com/vi/${firstMedia.videoId}/mqdefault.jpg`
+      if (news.media) {
+        // Обрабатываем media: может быть строкой или объектом
+        let mediaArray = news.media
+        if (typeof news.media === 'string') {
+          try {
+            mediaArray = JSON.parse(news.media)
+          } catch (e) {
+            console.error('Failed to parse media JSON:', e)
+            mediaArray = []
           }
-          // Для других видео - пока null
+        }
+        
+        if (Array.isArray(mediaArray) && mediaArray.length > 0) {
+          const firstMedia = mediaArray[0]
+          if (firstMedia.type === 'image') {
+            // Для картинок - используем оригинал как thumbnail
+            thumbnail = firstMedia.url
+          } else if (['youtube', 'rutube', 'vk'].includes(firstMedia.type)) {
+            // Для видео - генерируем заглушку или берем poster
+            if (firstMedia.type === 'youtube') {
+              thumbnail = `https://img.youtube.com/vi/${firstMedia.videoId}/mqdefault.jpg`
+            }
+            // Для других видео - пока null
+          }
         }
       }
       
