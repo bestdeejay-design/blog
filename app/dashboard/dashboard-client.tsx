@@ -688,7 +688,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                     const isSelected = editingNews.all_channels?.some((ch: any) => ch.id === channel.id) ||
                                       editingNews.channel_id === channel.id;
                     return (
-                      <label key={channel.id} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded transition-colors">
+                      <label key={`${editingNews.id}-${channel.id}`} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-600 rounded transition-colors">
                         <input
                           type="checkbox"
                           name="channel_ids"
