@@ -6,6 +6,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '12')
     const offset = parseInt(searchParams.get('offset') || '0')
+    const channelSlug = searchParams.get('channel') // Получаем slug канала
     
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +18,30 @@ export async function GET(request: Request) {
       .from('news')
       .select('id,title,content,excerpt,slug,status,published_at,channel_id,media,created_at,updated_at', { count: 'exact' })
       .eq('status', 'published')
-      .order('published_at', { ascending: false, nullsFirst: false })
+    
+    // Если указан канал - фильтруем по нему
+    if (channelSlug) {
+      // Сначала находим channel_id по slug
+      const { data: channelData } = await supabase
+        .from('channels')
+        .select('id')
+        .eq('slug', channelSlug)
+        .single()
+      
+      if (channelData) {
+        query = query.eq('channel_id', channelData.id)
+      } else {
+        // Канал не найден - возвращаем пустой результат
+        return NextResponse.json({ 
+          success: true, 
+          news: [],
+          hasMore: false,
+          total: 0
+        })
+      }
+    }
+    
+    query = query.order('published_at', { ascending: false, nullsFirst: false })
       .range(offset, offset + limit - 1)
     
     const { data, error, count } = await query

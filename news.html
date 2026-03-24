@@ -329,6 +329,7 @@
 
   <script>
     const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
+    const CHANNEL_SLUG = 'arental'; // Фильтр по каналу
     
     let currentOffset = 0;
     const limit = 20;
@@ -348,7 +349,7 @@
       const container = document.getElementById('news-list-container');
       
       try {
-        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}`);
+        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}&channel=${CHANNEL_SLUG}`);
         const data = await response.json();
         
         if (!data.success || !data.news || data.news.length === 0) {
@@ -421,19 +422,19 @@
         
         const channelName = news.channels?.name || 'Без канала';
         const imageUrl = news.thumbnail || null;
-        
+              
         const item = document.createElement('div');
         item.className = 'news-list-item';
         if (news.id === selectedNewsId) item.classList.add('active');
         item.onclick = () => selectNews(news);
-        
+              
         let html = '';
         if (imageUrl) {
           html += `<img src="${escapeHtml(imageUrl)}" alt="" class="news-list-item-image" />`;
         }
         html += `<h3 class="news-list-item-title">${escapeHtml(news.title)}</h3>`;
         html += '<div class="news-list-item-meta">';
-        html += `<span class="news-channel-badge">📺 ${escapeHtml(channelName)}</span>`;
+        // Убираем канал - мы уже на канале arental
         html += `<span>📅 ${date}</span>`;
         html += '</div>';
         
@@ -470,10 +471,8 @@
         day: 'numeric'
       });
       
-      const channelName = news.channels?.name || 'Без канала';
-      
-      titleEl.textContent = news.title;
-      channelEl.textContent = '📺 ' + channelName;
+      // Убираем канал - мы уже на канале arental
+      // channelEl.textContent = '📺 ' + channelName;
       dateEl.textContent = '📅 ' + date;
       
       if (news.thumbnail) {

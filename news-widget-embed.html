@@ -112,6 +112,7 @@
 <script>
   (function() {
     const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
+    const CHANNEL_SLUG = 'arental'; // Фильтр по каналу
     
     let currentOffset = 0;
     const limit = 12; // Показываем до 12 новостей на главной
@@ -126,7 +127,7 @@
       const container = document.getElementById('news-grid-arental');
       
       try {
-        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}`);
+        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}&channel=${CHANNEL_SLUG}`);
         const data = await response.json();
         
         if (!data.success || !data.news || data.news.length === 0) {
@@ -183,7 +184,6 @@
             <h3 class="news-title-arental">${escapeHtml(news.title)}</h3>
             <p class="news-excerpt-arental">${escapeHtml(excerpt)}</p>
             <div class="news-meta-arental">
-              <span class="news-channel-arental">📺 ${escapeHtml(channelName)}</span>
               <span class="news-date-arental">📅 ${date}</span>
             </div>
           </div>
