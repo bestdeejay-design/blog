@@ -34,6 +34,14 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
     try {
       console.log('Loading news...')
       const response = await fetch('/api/news')
+      
+      // Проверяем что ответ JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('❌ Non-JSON response from /api/news')
+        return
+      }
+      
       const result = await response.json()
       if (response.ok) {
         setNews(result.news || [])
