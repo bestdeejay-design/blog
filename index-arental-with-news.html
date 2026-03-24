@@ -427,14 +427,15 @@
         <h2 class="h2">Последние обновления</h2>
         <p class="kicker">Будьте в курсе наших достижений и инноваций</p>
         
-        <!-- News widget is loaded from news-widget-embed.js -->
+        <!-- News widget is loaded from external files -->
+        <link rel="stylesheet" href="news-widget.css">
         <script>
           window.NEWS_WIDGET_CONFIG = {
             channelId: '52b8077c-d760-47f2-bec8-f130c668d50f', // канал "атмосфера" (arental)
             newsPageUrl: 'news.html'
           };
         </script>
-        <script src="news-widget-embed.js"></script>
+        <script src="news-widget.js"></script>
       </div>
     </section>
     <!-- NEWS WIDGET END -->
@@ -747,14 +748,5 @@
       if (e.key === 'Escape') closeNewsModal();
     });
   </script>
-  
-  <!-- News Widget Configuration -->
-  <script>
-    window.NEWS_WIDGET_CONFIG = {
-      channelId: '52b8077c-d760-47f2-bec8-f130c668d50f', // канал "атмосфера" (arental)
-      newsPageUrl: 'news.html'
-    };
-  </script>
-  <script src="news-widget-embed.js"></script>
 </body>
 </html>
