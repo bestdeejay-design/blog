@@ -3,9 +3,55 @@ import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function PUT(request: Request) {
   try {
-    const { id, title, content, status, channel_ids, update_created_at } = await request.json()
-
-    console.log('📝 Update request:', { id, title: title?.substring(0, 50), channel_ids, status })
+    console.log('📝 Update request received')
+    
+    // Определяем тип контента
+    const contentType = request.headers.get('content-type') || ''
+    let data: any = {}
+    
+    if (contentType.includes('multipart/form-data')) {
+      // FormData с файлами
+      const formData = await request.formData()
+      data.id = formData.get('id') as string
+      data.title = formData.get('title') as string
+      data.content = formData.get('content') as string
+      data.status = formData.get('status') as string
+      data.update_created_at = formData.get('update_created_at') === 'on'
+      
+      // Парсим каналы из JSON строки
+      const channelIdsRaw = formData.get('channel_ids') as string | null
+      if (channelIdsRaw) {
+        try {
+          data.channel_ids = JSON.parse(channelIdsRaw)
+        } catch (e) {
+          console.error('Failed to parse channel_ids:', e)
+          data.channel_ids = []
+        }
+      }
+      
+      // Файл картинки
+      const mediaImageFile = formData.get('media_image') as File | null
+      if (mediaImageFile && mediaImageFile.size > 0) {
+        data.media_image = mediaImageFile
+      }
+      
+      // Ссылка на видео
+      data.media_video = formData.get('media_video') as string | null
+      
+      console.log('📦 FormData:', { 
+        id: data.id, 
+        title: data.title?.substring(0, 50), 
+        hasImage: !!data.media_image,
+        hasVideo: !!data.media_video,
+        channelCount: data.channel_ids?.length 
+      })
+    } else {
+      // JSON (для обратной совместимости)
+      data = await request.json()
+      console.log('📦 JSON:', { id: data.id, title: data.title?.substring(0, 50), channel_ids: data.channel_ids })
+    }
+    
+    const { id, title, content, status, channel_ids, update_created_at } = data
 
     if (!id) {
       console.error('❌ ID is required')
@@ -88,6 +134,60 @@ export async function PUT(request: Request) {
     }
 
     console.log('News updated successfully:', newsItem.id)
+    
+    // 📷 Обработка медиа (картинки и видео) - ТОЛЬКО для FormData
+    if (contentType.includes('multipart/form-data')) {
+      let mediaArray = newsItem.media || []
+      if (typeof mediaArray === 'string') {
+        try {
+          mediaArray = JSON.parse(mediaArray)
+        } catch (e) {
+          console.error('Failed to parse media JSON:', e)
+          mediaArray = []
+        }
+      }
+      
+      // Загрузка новой картинки если есть
+      if (data.media_image && data.media_image.size > 0) {
+        const { uploadImage } = await import('@/lib/media')
+        const uploadResult = await uploadImage(data.media_image, id)
+        if (uploadResult.success) {
+          // Добавляем новую картинку в начало массива
+          mediaArray.unshift({
+            type: 'image',
+            url: uploadResult.url,
+            caption: ''
+          })
+          console.log('✅ Uploaded new image:', uploadResult.url)
+        }
+      }
+      
+      // Обработка нового видео если есть ссылка
+      if (data.media_video) {
+        const { extractVideoId } = await import('@/lib/media')
+        const videoInfo = extractVideoId(data.media_video)
+        if (videoInfo) {
+          mediaArray.push({
+            type: videoInfo.type,
+            url: data.media_video,
+            videoId: videoInfo.videoId
+          })
+          console.log('✅ Added video:', videoInfo.type, videoInfo.videoId)
+        }
+      }
+      
+      // Обновляем новость с новыми медиа
+      if (mediaArray.length > 0) {
+        await supabaseAdmin
+          .from('news')
+          .update({ media: mediaArray })
+          .eq('id', id)
+        
+        newsItem.media = mediaArray
+        console.log('✅ Updated media:', mediaArray.length, 'items')
+      }
+    }
+    
     return NextResponse.json({ success: true, news: newsItem })
   } catch (error: any) {
     console.error('Update news error:', error)

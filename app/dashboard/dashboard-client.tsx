@@ -621,16 +621,34 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             e.preventDefault()
             const fd = new FormData(e.currentTarget)
             const selectedChannels = Array.from(e.currentTarget.querySelectorAll('input[name="channel_ids"]:checked')).map((cb: any) => cb.value)
-            const updateCreatedAt = fd.get('update_created_at') === 'on'
-            const data = {
-              id: editingNews.id,
-              title: fd.get('title') as string,
-              content: fd.get('content') as string,
-              status: fd.get('status') as string,
-              channel_ids: selectedChannels,
-              update_created_at: updateCreatedAt
+            
+            // Создаем FormData для отправки
+            const submitData = new FormData()
+            submitData.append('id', editingNews.id)
+            submitData.append('title', fd.get('title') as string)
+            submitData.append('content', fd.get('content') as string)
+            submitData.append('status', fd.get('status') as string)
+            submitData.append('channel_ids', JSON.stringify(selectedChannels))
+            if (fd.get('update_created_at')) {
+              submitData.append('update_created_at', 'on')
             }
-            handleSubmit('/api/news/update', data, () => {})
+            // Картинка и видео уже в form data из input'ов
+            const mediaImage = fd.get('media_image') as File
+            const mediaVideo = fd.get('media_video') as string
+            if (mediaImage && mediaImage.size > 0) {
+              submitData.append('media_image', mediaImage)
+            }
+            if (mediaVideo) {
+              submitData.append('media_video', mediaVideo)
+            }
+            
+            console.log('📦 Submitting FormData with:', { 
+              hasImage: !!mediaImage && mediaImage.size > 0,
+              hasVideo: !!mediaVideo,
+              channelCount: selectedChannels.length 
+            })
+            
+            handleSubmit('/api/news/update', submitData, () => {})
           }} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Заголовок</label>
