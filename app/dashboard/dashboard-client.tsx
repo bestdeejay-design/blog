@@ -315,17 +315,19 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               </span>
               
               {/* Theme Switcher */}
-              <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+              <div className="flex items-center space-x-2 bg-secondary rounded-lg p-1 border border-primary">
                 <button
-                  onClick={() => setTheme('light')}
+                  onClick={() => {
+                    console.log('☀️ Clicked')
+                    setTheme('light')
+                  }}
                   className={`w-8 h-8 rounded-md transition-all flex items-center justify-center ${
                     theme === 'light'
-                      ? 'bg-white dark:bg-gray-700 text-gray-900 shadow-sm'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                      ? 'bg-primary text-primary shadow-sm'
+                      : 'text-secondary hover-text-primary'
                   }`}
                   title="Светлая тема"
                 >
-                  {/* Sun icon - SVG */}
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="5"></circle>
                     <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -339,15 +341,17 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                   </svg>
                 </button>
                 <button
-                  onClick={() => setTheme('dark')}
+                  onClick={() => {
+                    console.log('🌙 Clicked')
+                    setTheme('dark')
+                  }}
                   className={`w-8 h-8 rounded-md transition-all flex items-center justify-center ${
                     theme === 'dark'
-                      ? 'bg-gray-900 text-white shadow-sm'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-secondary hover-text-primary'
                   }`}
                   title="Тёмная тема"
                 >
-                  {/* Moon icon - SVG */}
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                   </svg>
