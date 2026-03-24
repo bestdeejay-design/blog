@@ -49,10 +49,13 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   
   // Theme application
   useEffect(() => {
+    console.log('🎨 Switching theme to:', theme)
     if (theme === 'light') {
       document.body.classList.add('light')
+      console.log('✅ Added .light class to body')
     } else {
       document.body.classList.remove('light')
+      console.log('✅ Removed .light class from body')
     }
     localStorage.setItem('dashboard-theme', theme)
   }, [theme])
