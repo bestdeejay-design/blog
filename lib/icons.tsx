@@ -1,12 +1,9 @@
-import { LucideIcon } from 'lucide-react'
+import { LucideProps } from 'lucide-react'
 
-export interface IconProps {
-  className?: string
-  size?: number
-}
+export interface IconProps extends LucideProps {}
 
 // News & Content Icons
-export const Newspaper: LucideIcon = (props: IconProps) => (
+export const Newspaper = (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -27,7 +24,7 @@ export const Newspaper: LucideIcon = (props: IconProps) => (
 )
 
 // TV/Media Icons
-export const Tv: LucideIcon = (props: IconProps) => (
+export const Tv= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -46,7 +43,7 @@ export const Tv: LucideIcon = (props: IconProps) => (
 )
 
 // User Icons
-export const User: LucideIcon = (props: IconProps) => (
+export const User= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -65,7 +62,7 @@ export const User: LucideIcon = (props: IconProps) => (
 )
 
 // Action Icons
-export const Edit: LucideIcon = (props: IconProps) => (
+export const Edit= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -83,7 +80,7 @@ export const Edit: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const Trash: LucideIcon = (props: IconProps) => (
+export const Trash= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -102,7 +99,7 @@ export const Trash: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const Plus: LucideIcon = (props: IconProps) => (
+export const Plus= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -120,7 +117,7 @@ export const Plus: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const Save: LucideIcon = (props: IconProps) => (
+export const Save= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -140,7 +137,7 @@ export const Save: LucideIcon = (props: IconProps) => (
 )
 
 // Status Icons
-export const Check: LucideIcon = (props: IconProps) => (
+export const Check= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -157,7 +154,7 @@ export const Check: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const X: LucideIcon = (props: IconProps) => (
+export const X= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -176,7 +173,7 @@ export const X: LucideIcon = (props: IconProps) => (
 )
 
 // Analytics Icons
-export const BarChart: LucideIcon = (props: IconProps) => (
+export const BarChart= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -195,7 +192,7 @@ export const BarChart: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const Zap: LucideIcon = (props: IconProps) => (
+export const Zap= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -213,7 +210,7 @@ export const Zap: LucideIcon = (props: IconProps) => (
 )
 
 // Media Icons
-export const Image: LucideIcon = (props: IconProps) => (
+export const Image= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -232,7 +229,7 @@ export const Image: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const Video: LucideIcon = (props: IconProps) => (
+export const Video= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -251,7 +248,7 @@ export const Video: LucideIcon = (props: IconProps) => (
 )
 
 // UI Icons
-export const Calendar: LucideIcon = (props: IconProps) => (
+export const Calendar= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -271,7 +268,7 @@ export const Calendar: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const RefreshCw: LucideIcon = (props: IconProps) => (
+export const RefreshCw= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -291,7 +288,7 @@ export const RefreshCw: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const ArrowLeft: LucideIcon = (props: IconProps) => (
+export const ArrowLeft= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -309,7 +306,7 @@ export const ArrowLeft: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const LogOut: LucideIcon = (props: IconProps) => (
+export const LogOut= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -328,7 +325,7 @@ export const LogOut: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const Sun: LucideIcon = (props: IconProps) => (
+export const Sun= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -353,7 +350,7 @@ export const Sun: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const Moon: LucideIcon = (props: IconProps) => (
+export const Moon= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
@@ -370,7 +367,7 @@ export const Moon: LucideIcon = (props: IconProps) => (
   </svg>
 )
 
-export const Lock: LucideIcon = (props: IconProps) => (
+export const Lock= (props: IconProps) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     width={props.size || 24} 
