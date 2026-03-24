@@ -379,16 +379,14 @@
         
         renderNewsList();
         
-        // Auto-select first news or news from URL
-        if (initialNewsId && !selectedNewsId && allNews.length > 0) {
-          const newsToSelect = allNews.find(n => n.id === initialNewsId);
-          if (newsToSelect) {
-            selectNews(newsToSelect);
-          } else if (allNews.length > 0 && !selectedNewsId) {
-            selectNews(allNews[0]);
-          }
-        } else if (allNews.length > 0 && !selectedNewsId) {
-          selectNews(allNews[0]);
+        // Auto-select news
+        if (!selectedNewsId && allNews.length > 0) {
+          // Если есть news в URL - выбираем его, иначе первую (самую свежую)
+          const newsToSelect = initialNewsId 
+            ? allNews.find(n => n.id === initialNewsId) || allNews[0]
+            : allNews[0]; // Самая свежая (первая в списке)
+          
+          selectNews(newsToSelect);
         }
         
         // Add "Load More" indicator
