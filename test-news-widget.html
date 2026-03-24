@@ -178,59 +178,87 @@
     // ВАЖНО: Укажите полный URL к вашему API на Vercel
     const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
     
+    let currentOffset = 0;
+    const limit = 12;
+    let isLoading = false;
+    let hasMore = true;
+    let allNews = [];
+    
     async function loadNews() {
+      if (isLoading || !hasMore) return;
+      
+      isLoading = true;
       const container = document.getElementById('news-container');
       
       try {
-        console.log('Loading news from:', API_URL);
-        const response = await fetch(API_URL + '?limit=10');
+        console.log('Loading news from:', `${API_URL}?limit=${limit}&offset=${currentOffset}`);
+        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}`);
         const data = await response.json();
         
         console.log('Received data:', data);
         
         if (!data.success || !data.news || data.news.length === 0) {
-          container.innerHTML = '<div class="empty">Новостей пока нет 📭</div>';
+          if (allNews.length === 0) {
+            container.innerHTML = '<div class="empty">Новостей пока нет 📭</div>';
+          }
           return;
         }
         
-        const newsHTML = data.news.map(news => {
-          const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
-          
-          const channelName = news.channels?.name || 'Без канала';
-          const excerpt = news.excerpt || (news.content ? news.content.substring(0, 200) + '...' : '');
-          
-          // Проверяем есть ли картинка
-          const hasImage = news.media && news.media.length > 0 && news.media[0].type === 'image';
-          const imageUrl = hasImage ? news.media[0].url : null;
-          
-          return `
-            <div class="news-item">
-              ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="News image" style="max-width: 100%; height: auto; border-radius: 12px; margin-bottom: 16px;" />` : ''}
-              <div class="news-title">${escapeHtml(news.title)}</div>
-              <div class="news-excerpt">${escapeHtml(excerpt)}</div>
-              <div class="news-meta">
-                <span class="news-channel">📺 ${escapeHtml(channelName)}</span>
-                <span class="news-date">📅 ${date}</span>
-              </div>
-            </div>
-          `;
-        }).join('');
+        allNews = [...allNews, ...(data.news || [])];
+        hasMore = data.hasMore || false;
+        currentOffset += limit;
         
-        container.innerHTML = newsHTML;
+        renderNewsList(allNews);
         
+        // Добавляем индикатор загрузки если есть еще новости
+        if (hasMore) {
+          container.innerHTML += '<div id="loading-indicator" style="text-align:center;padding:20px;color:#86868b;">Загрузка...</div>';
+        }
       } catch (error) {
         console.error('Error loading news:', error);
-        container.innerHTML = `
-          <div class="error">
-            <strong>❌ Ошибка загрузки новостей</strong><br>
-            <small>${error.message}</small>
+        if (allNews.length === 0) {
+          container.innerHTML = `
+            <div class="error">
+              <strong>❌ Ошибка загрузки новостей</strong><br>
+              <small>${error.message}</small>
+            </div>
+          `;
+        }
+      }
+      
+      isLoading = false;
+    }
+    
+    function renderNewsList(newsList) {
+      const container = document.getElementById('news-container');
+      
+      const newsHTML = newsList.map(news => {
+        const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const channelName = news.channels?.name || 'Без канала';
+        const excerpt = news.excerpt || (news.content ? news.content.substring(0, 200) + '...' : '');
+        
+        // Используем thumbnail из API
+        const imageUrl = news.thumbnail || null;
+        
+        return `
+          <div class="news-item">
+            ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="News image" style="max-width: 100%; height: auto; border-radius: 12px; margin-bottom: 16px;" />` : ''}
+            <div class="news-title">${escapeHtml(news.title)}</div>
+            <div class="news-excerpt">${escapeHtml(excerpt)}</div>
+            <div class="news-meta">
+              <span class="news-channel">📺 ${escapeHtml(channelName)}</span>
+              <span class="news-date">📅 ${date}</span>
+            </div>
           </div>
         `;
-      }
+      }).join('');
+      
+      container.innerHTML = newsHTML;
     }
     
     function escapeHtml(text) {
@@ -242,6 +270,18 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+    
+    // Ленивая загрузка при скролле
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Если доскроллили до конца (за 200px до конца)
+      if (scrollTop + windowHeight >= documentHeight - 200) {
+        loadNews();
+      }
+    });
     
     document.addEventListener('DOMContentLoaded', loadNews);
   </script>
