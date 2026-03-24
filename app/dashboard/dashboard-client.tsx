@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Modal, StatCard } from './ui-components'
 
 export default function DashboardClient({ payload, initialChannels, initialUsers }: any) {
@@ -20,6 +20,12 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   const [filterChannel, setFilterChannel] = useState<string>('all')
   const [filterAuthor, setFilterAuthor] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  
+  // Refs for Quill editors
+  const createEditorRef = useRef<HTMLDivElement>(null)
+  const editEditorRef = useRef<HTMLDivElement>(null)
+  const quillCreate = useRef<any>(null)
+  const quillEdit = useRef<any>(null)
 
   // Hydration fix: wait for mount before rendering
   useEffect(() => {
@@ -28,7 +34,71 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
     setUsers(initialUsers || [])
     // Load news on mount
     loadNews()
-  }, [initialChannels, initialUsers])
+    
+    // Initialize Quill editors when modals open
+    if (showModal === 'news' && createEditorRef.current && !quillCreate.current) {
+      initQuill(createEditorRef.current, quillCreate)
+    }
+    if (showModal === 'edit-news' && editEditorRef.current && !quillEdit.current) {
+      initQuill(editEditorRef.current, quillEdit, editingNews?.content)
+    }
+  }, [initialChannels, initialUsers, showModal, editingNews])
+  
+  // Initialize Quill editor
+  const initQuill = async (container: HTMLDivElement, quillRef: any, initialContent: string = '') => {
+    // Dynamically load Quill CSS
+    if (!document.querySelector('link[href*="quill.snow.css"]')) {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css'
+      document.head.appendChild(link)
+    }
+    
+    // Dynamically load Quill JS
+    if (!(window as any).Quill) {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.quilljs.com/1.3.6/quill.js'
+      script.async = true
+      script.onload = () => {
+        const Quill = (window as any).Quill
+        quillRef.current = new Quill(container, {
+          theme: 'snow',
+          modules: {
+            toolbar: [
+              [{ 'header': [1, 2, 3, false] }],
+              ['bold', 'italic', 'underline'],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              ['link'],
+              ['clean']
+            ]
+          }
+        })
+        
+        if (initialContent) {
+          quillRef.current.root.innerHTML = initialContent
+        }
+      }
+      document.body.appendChild(script)
+    } else {
+      const Quill = (window as any).Quill
+      quillRef.current = new Quill(container, {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['link'],
+            ['clean']
+          ]
+        }
+      })
+      
+      if (initialContent) {
+        quillRef.current.root.innerHTML = initialContent
+      }
+    }
+  }
 
   const loadNews = async () => {
     try {
@@ -610,6 +680,16 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
         <Modal title="📰 Создать новость" onClose={() => setShowModal(null)}>
           <form onSubmit={(e) => {
             e.preventDefault()
+            
+            // Sync content from Quill editor
+            if (quillCreate.current) {
+              const html = quillCreate.current.root.innerHTML
+              const textField = document.getElementById('create-content-field')
+              if (textField) {
+                textField.setAttribute('value', html)
+              }
+            }
+            
             const fd = new FormData(e.currentTarget)
             // Собираем выбранные каналы
             const selectedChannels = Array.from(e.currentTarget.querySelectorAll('input[name="channel_ids"]:checked')).map((cb: any) => cb.value)
@@ -623,7 +703,8 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Текст новости</label>
-              <textarea name="content" rows={5} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" placeholder="Введите текст новости" style={{ minHeight: '120px' }} />
+              <div ref={createEditorRef} className="border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 min-h-[200px]" />
+              <input type="hidden" name="content" id="create-content-field" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">📷 Медиа</label>
@@ -692,6 +773,15 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             e.preventDefault()
             console.log('🚀 Starting edit form submission...')
             
+            // Sync content from Quill editor
+            if (quillEdit.current) {
+              const html = quillEdit.current.root.innerHTML
+              const textField = document.getElementById('edit-content-field')
+              if (textField) {
+                textField.setAttribute('value', html)
+              }
+            }
+            
             const fd = new FormData(e.currentTarget)
             console.log('📦 Raw FormData from form:')
             for (let [key, value] of fd.entries()) {
@@ -749,7 +839,8 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Текст новости</label>
-              <textarea name="content" rows={5} defaultValue={editingNews.content} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" style={{ minHeight: '120px' }} />
+              <div ref={editEditorRef} className="border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 min-h-[200px]" />
+              <input type="hidden" name="content" id="edit-content-field" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">📷 Медиа (существующее)</label>
