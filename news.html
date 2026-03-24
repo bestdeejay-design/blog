@@ -460,31 +460,6 @@
       .header-nav {
         display: none;
       }
-      
-      /* Show mobile back button in panel */
-      .mobile-back-btn {
-        display: block;
-        background: var(--primary);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-        margin-bottom: 16px;
-        width: 100%;
-      }
-      
-      .mobile-back-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
-      }
-      
-      /* Hide back button on mobile, show in menu */
-      .back-btn {
-        display: none;
-      }
     }
     
     @media (max-width: 768px) {
@@ -556,8 +531,6 @@
       <!-- Left Panel: News List -->
       <aside class="news-list-panel">
         <div class="news-list-header">
-          <!-- Mobile back button (only visible in menu) -->
-          <button onclick="window.location.href='index-arental-with-news.html'" class="mobile-back-btn">← На главную</button>
           <h1 class="news-list-title">Все новости</h1>
           <p class="news-list-subtitle">Будьте в курсе последних событий</p>
         </div>
