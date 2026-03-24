@@ -103,15 +103,20 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
       const contentType = response.headers.get('content-type')
       let result
       if (contentType && contentType.includes('application/json')) {
-        result = await response.json()
+        try {
+          result = await response.json()
+          console.log('📥 Response:', response.status, result)
+        } catch (parseError) {
+          console.error('❌ Failed to parse JSON:', parseError)
+          const text = await response.text()
+          throw new Error('Ошибка парсинга ответа: ' + text.substring(0, 100))
+        }
       } else {
         // Пытаемся получить текст ошибки
         const text = await response.text()
         console.error('❌ Non-JSON response:', text.substring(0, 500))
         throw new Error('Сервер вернул некорректный ответ: ' + text.substring(0, 100))
       }
-      
-      console.log('📥 Response:', response.status, result)
       
       if (response.ok) {
         console.log('✅ Success!')
