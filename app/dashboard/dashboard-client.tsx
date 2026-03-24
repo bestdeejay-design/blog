@@ -702,6 +702,17 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               <input type="text" name="title" required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all" placeholder="Введите заголовок" />
             </div>
             <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Краткое описание (excerpt)</label>
+              <textarea 
+                name="excerpt" 
+                rows={2} 
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" 
+                placeholder="Краткая выжимка из новости (2-3 предложения). Используется для SEO и превью." 
+                maxLength={300}
+              />
+              <p className="text-xs text-gray-500 mt-1">Максимум 300 символов. Будет использоваться в meta description и для превью.</p>
+            </div>
+            <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Текст новости</label>
               <div ref={createEditorRef} className="border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 min-h-[200px]" />
               <input type="hidden" name="content" id="create-content-field" />
@@ -836,6 +847,18 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Заголовок</label>
               <input type="text" name="title" defaultValue={editingNews.title} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Краткое описание (excerpt)</label>
+              <textarea 
+                name="excerpt" 
+                rows={2} 
+                defaultValue={editingNews.excerpt || ''}
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" 
+                placeholder="Краткая выжимка из новости (2-3 предложения)" 
+                maxLength={300}
+              />
+              <p className="text-xs text-gray-500 mt-1">Максимум 300 символов</p>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Текст новости</label>
