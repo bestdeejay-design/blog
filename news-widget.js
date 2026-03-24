@@ -105,7 +105,9 @@
     container.innerHTML = '';
     
     newsList.forEach(news => {
-      const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+      // Используем created_at для даты создания
+      const dateRaw = news.created_at || news.published_at;
+      const date = new Date(dateRaw).toLocaleDateString('ru-RU', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
