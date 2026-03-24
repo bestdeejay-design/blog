@@ -99,6 +99,28 @@
       box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
     }
     
+    /* Theme Switcher */
+    .theme-switcher {
+      position: fixed;
+      top: 20px;
+      right: 70px;
+      z-index: 100;
+      display: flex;
+      gap: 8px;
+    }
+    .theme-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--ink);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .theme-btn:hover { transform: scale(1.1); }
+    .theme-btn[data-theme="dark"] { background: #0f172a; }
+    .theme-btn[data-theme="light"] { background: #ffffff; }
+    .theme-btn[data-theme="bright"] { background: #e0f2fe; }
+    
     /* Main Layout */
     .news-layout {
       display: grid;
@@ -287,6 +309,13 @@
       <div class="header-content">
         <a href="index.html" class="logo">АТМОСФЕРА</a>
         <button onclick="window.location.href='index.html'" class="back-btn">← На главную</button>
+      </div>
+      
+      <!-- Theme Switcher -->
+      <div class="theme-switcher">
+        <button class="theme-btn" data-theme="dark" title="Тёмная тема"></button>
+        <button class="theme-btn" data-theme="light" title="Светлая тема"></button>
+        <button class="theme-btn" data-theme="bright" title="Яркая тема"></button>
       </div>
     </div>
   </header>
@@ -501,6 +530,33 @@
     
     // Load news on page load
     document.addEventListener('DOMContentLoaded', loadNews);
+    
+    // ===== THEME SWITCHER =====
+    (function() {
+      // Get theme from URL or localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      let currentTheme = urlParams.get('theme') || localStorage.getItem('theme') || 'dark';
+      
+      // Apply theme
+      function applyTheme(theme) {
+        document.documentElement.className = theme;
+        localStorage.setItem('theme', theme);
+        // Update URL without reloading
+        const url = new URL(window.location);
+        url.searchParams.set('theme', theme);
+        window.history.replaceState({}, '', url);
+      }
+      
+      applyTheme(currentTheme);
+      
+      // Theme switcher buttons
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const theme = btn.getAttribute('data-theme');
+          applyTheme(theme);
+        });
+      });
+    })();
   </script>
 </body>
 </html>

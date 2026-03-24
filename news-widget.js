@@ -45,7 +45,7 @@
       container = document.createElement('div');
       container.id = CONTAINER_ID;
       container.className = 'news-widget-wrapper';
-      container.innerHTML = '<div id="news-widget-grid" class="news-widget-grid"></div>';
+      container.innerHTML = '<div class="container"><div id="news-widget-grid" class="news-widget-grid"></div></div>';
       // Try to append to section or body
       const section = document.querySelector('section#news') || document.querySelector('.section');
       if (section) {
@@ -86,7 +86,8 @@
       if (allNews.length > 0 && !document.querySelector('.news-widget-view-all')) {
         const viewAllBtn = document.createElement('div');
         viewAllBtn.className = 'news-widget-view-all';
-        viewAllBtn.innerHTML = '<a href="' + NEWS_PAGE_URL + '">📰 Все новости →</a>';
+        const theme = localStorage.getItem('theme') || 'dark';
+        viewAllBtn.innerHTML = '<a href="' + NEWS_PAGE_URL + '?theme=' + theme + '">📰 Все новости →</a>';
         document.getElementById(CONTAINER_ID).appendChild(viewAllBtn);
       }
     } catch (error) {
