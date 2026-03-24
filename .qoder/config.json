@@ -1,0 +1,40 @@
+{
+  "name": "Blog News CMS",
+  "description": "Multi-channel news management system with Supabase backend",
+  "version": "1.0.0",
+  "database": {
+    "type": "supabase",
+    "connection": {
+      "url": "https://mtxhzvxetxcppzwgrrsu.supabase.co",
+      "projectId": "mtxhzvxetxcppzwgrrsu"
+    },
+    "tables": [
+      "news",
+      "channels",
+      "news_channels",
+      "user_profiles"
+    ],
+    "features": [
+      "multi-channel-news",
+      "published-draft-status",
+      "admin-dashboard",
+      "public-api"
+    ]
+  },
+  "endpoints": {
+    "public": {
+      "news": "/api/news-simple",
+      "dashboard": "/dashboard"
+    },
+    "admin": {
+      "create": "/api/news/create",
+      "update": "/api/news/update",
+      "list": "/api/news"
+    }
+  },
+  "deployment": {
+    "platform": "vercel",
+    "url": "https://blog-three-opal-85.vercel.app",
+    "githubPages": "https://bestdeejay-design.github.io/blog/test-news-widget.html"
+  }
+}
