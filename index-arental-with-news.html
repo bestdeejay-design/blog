@@ -427,11 +427,14 @@
         <h2 class="h2">Последние обновления</h2>
         <p class="kicker">Будьте в курсе наших достижений и инноваций</p>
         
-        <div id="news-widget-container" style="margin-top: 16px;">
-          <div id="news-grid-arental" class="news-grid-arental">
-            <!-- Новости загружаются сюда -->
-          </div>
-        </div>
+        <!-- News widget is loaded from news-widget-embed.js -->
+        <script>
+          window.NEWS_WIDGET_CONFIG = {
+            channelId: '52b8077c-d760-47f2-bec8-f130c668d50f', // канал "атмосфера" (arental)
+            newsPageUrl: 'news.html'
+          };
+        </script>
+        <script src="news-widget-embed.js"></script>
       </div>
     </section>
     <!-- NEWS WIDGET END -->
@@ -665,110 +668,6 @@
         mobileMenu.style.display = 'none';
       }
     });
-    
-    // ===== NEWS WIDGET JAVASCRIPT =====
-    (function() {
-      const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
-      
-      let currentOffset = 0;
-      const limit = 12;
-      let isLoading = false;
-      let hasMore = true;
-      let allNews = [];
-      
-      async function loadNews() {
-        if (isLoading || !hasMore) return;
-        
-        isLoading = true;
-        const container = document.getElementById('news-grid-arental');
-        
-        try {
-          const response = await fetch(API_URL + '?limit=' + limit + '&offset=' + currentOffset);
-          const data = await response.json();
-          
-          if (!data.success || !data.news || data.news.length === 0) {
-            if (allNews.length === 0) {
-              container.innerHTML = 'Новостей пока нет 📭';
-            }
-            return;
-          }
-          
-          allNews = [...allNews, ...(data.news || [])];
-          hasMore = data.hasMore || false;
-          currentOffset += limit;
-          
-          renderNewsList(allNews);
-          
-          if (hasMore) {
-            const loadMoreBtn = document.createElement('div');
-            loadMoreBtn.id = 'news-load-more-arental';
-            loadMoreBtn.style.cssText = 'text-align:center;margin-top:24px;';
-            loadMoreBtn.innerHTML = '<button class="btn btn-ghost" onclick="loadMoreNews()">Показать еще новости</button>';
-            document.getElementById('news-widget-container').appendChild(loadMoreBtn);
-          }
-        } catch (error) {
-          console.error('Error loading news:', error);
-          if (allNews.length === 0) {
-            container.innerHTML = '❌ Ошибка загрузки новостей';
-          }
-        }
-        
-        isLoading = false;
-      }
-      
-      function renderNewsList(newsList) {
-        const container = document.getElementById('news-grid-arental');
-        container.innerHTML = '';
-        
-        newsList.forEach(news => {
-          const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
-          
-          const excerpt = news.excerpt || (news.content ? news.content.substring(0, 150) + '...' : '');
-          const imageUrl = news.thumbnail || null;
-          
-          const card = document.createElement('div');
-          card.className = 'news-card-arental';
-          card.onclick = () => openNewsModal(news);
-          card.innerHTML = createNewsCard(imageUrl, news.title, excerpt, date);
-          container.appendChild(card);
-        });
-      }
-      
-      function createNewsCard(imageUrl, title, excerpt, date) {
-        let html = '';
-        if (imageUrl) {
-          html += '<img src="' + escapeHtml(imageUrl) + '" alt="" class="news-image-arental" />';
-        }
-        html += '<div class="news-content-arental">';
-        html += '<h3 class="news-title-arental">' + escapeHtml(title) + '</h3>';
-        html += '<p class="news-excerpt-arental">' + escapeHtml(excerpt) + '</p>';
-        html += '<div class="news-meta-arental">';
-        html += '<span class="news-date-arental">📅 ' + date + '</span>';
-        html += '</div></div>';
-        return html;
-      }
-      
-      window.loadMoreNews = function() {
-        const btn = document.getElementById('news-load-more-arental');
-        if (btn) btn.remove();
-        loadNews();
-      };
-      
-      function escapeHtml(text) {
-        if (!text) return '';
-        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-      }
-      
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadNews);
-      } else {
-        loadNews();
-      }
-    })();
   </script>
   
   <!-- NEWS MODAL -->
@@ -848,5 +747,14 @@
       if (e.key === 'Escape') closeNewsModal();
     });
   </script>
+  
+  <!-- News Widget Configuration -->
+  <script>
+    window.NEWS_WIDGET_CONFIG = {
+      channelId: '52b8077c-d760-47f2-bec8-f130c668d50f', // канал "атмосфера" (arental)
+      newsPageUrl: 'news.html'
+    };
+  </script>
+  <script src="news-widget-embed.js"></script>
 </body>
 </html>
