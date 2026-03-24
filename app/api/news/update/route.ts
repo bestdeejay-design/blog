@@ -7,10 +7,13 @@ export async function PUT(request: Request) {
     
     // Определяем тип контента
     const contentType = request.headers.get('content-type') || ''
+    console.log('📋 Content-Type:', contentType)
+    
     let data: any = {}
     
     if (contentType.includes('multipart/form-data')) {
       // FormData с файлами
+      console.log('📦 Parsing FormData...')
       const formData = await request.formData()
       data.id = formData.get('id') as string
       data.title = formData.get('title') as string
@@ -20,11 +23,13 @@ export async function PUT(request: Request) {
       
       // Парсим каналы из JSON строки
       const channelIdsRaw = formData.get('channel_ids') as string | null
+      console.log('📺 channel_ids raw:', channelIdsRaw)
       if (channelIdsRaw) {
         try {
           data.channel_ids = JSON.parse(channelIdsRaw)
+          console.log('✅ Parsed channel_ids:', data.channel_ids)
         } catch (e) {
-          console.error('Failed to parse channel_ids:', e)
+          console.error('❌ Failed to parse channel_ids:', e)
           data.channel_ids = []
         }
       }
@@ -33,12 +38,16 @@ export async function PUT(request: Request) {
       const mediaImageFile = formData.get('media_image') as File | null
       if (mediaImageFile && mediaImageFile.size > 0) {
         data.media_image = mediaImageFile
+        console.log('📷 Image file:', mediaImageFile.name, mediaImageFile.size)
       }
       
       // Ссылка на видео
       data.media_video = formData.get('media_video') as string | null
+      if (data.media_video) {
+        console.log('🎥 Video URL:', data.media_video)
+      }
       
-      console.log('📦 FormData:', { 
+      console.log('📦 FormData parsed:', { 
         id: data.id, 
         title: data.title?.substring(0, 50), 
         hasImage: !!data.media_image,
@@ -47,6 +56,7 @@ export async function PUT(request: Request) {
       })
     } else {
       // JSON (для обратной совместимости)
+      console.log('📦 Parsing JSON...')
       data = await request.json()
       console.log('📦 JSON:', { id: data.id, title: data.title?.substring(0, 50), channel_ids: data.channel_ids })
     }
@@ -96,6 +106,13 @@ export async function PUT(request: Request) {
       console.error('Supabase error:', newsError)
       throw newsError
     }
+    
+    if (!newsItem) {
+      console.error('❌ News item not found after update')
+      throw new Error('Новость не найдена после обновления')
+    }
+
+    console.log('✅ News updated in DB:', newsItem.id)
 
     // Обновляем каналы если переданы
     if (channel_ids && channel_ids.length > 0) {
