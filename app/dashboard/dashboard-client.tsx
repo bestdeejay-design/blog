@@ -387,11 +387,78 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               {getFilteredNews().length === 0 ? (
                 <p className="text-gray-500 text-center py-8">Новостей нет</p>
               ) : (
-                getFilteredNews().map((item: any) => (
-                  <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
+                getFilteredNews().map((item: any) => {
+                  // Get first image from media array
+                  const thumbnail = item.media && item.media.length > 0 && item.media[0].type === 'image' 
+                    ? item.media[0].url 
+                    : null;
+                  
+                  return (
+                    <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex gap-4">
+                      {/* Thumbnail */}
+                      <div className="flex-shrink-0">
+                        {thumbnail ? (
+                          <img 
+                            src={thumbnail} 
+                            alt={item.title}
+                            className="w-32 h-32 object-cover rounded-lg"
+                          />
+                        ) : (
+                          <div className="w-32 h-32 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center text-4xl">
+                            📰
+                          </div>
+                        )}
+                        {/* Action buttons under image */}
+                        <div className="flex gap-2 mt-2 justify-center">
+                          <button 
+                            onClick={() => {
+                              setEditingNews(item)
+                              setShowModal('edit-news')
+                            }} 
+                            className="text-blue-600 hover:text-blue-700 p-1.5 hover:bg-blue-50 dark:hover:bg-gray-700 rounded transition-all text-sm"
+                            title="Редактировать"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              if (confirm(`Переместить новость "${item.title}" в черновики?`)) {
+                                setLoading(true)
+                                try {
+                                  const response = await fetch('/api/news/update', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      id: item.id,
+                                      status: 'draft'
+                                    })
+                                  })
+                                  const result = await response.json()
+                                  if (response.ok) {
+                                    alert('✅ Новость перемещена в черновики')
+                                    await loadNews()
+                                  } else {
+                                    alert('❌ Ошибка: ' + result.error)
+                                  }
+                                } catch (error) {
+                                  console.error('Soft delete error:', error)
+                                  alert('❌ Ошибка при перемещении в черновики')
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }
+                            }} 
+                            className="text-red-600 hover:text-red-700 p-1.5 hover:bg-red-50 dark:hover:bg-gray-700 rounded transition-all text-sm" 
+                            title="Переместить в черновики"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-2 flex-wrap">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
                             item.status === 'published' ? 'bg-green-100 text-green-800' :
                             item.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
@@ -412,11 +479,11 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                             )}
                           </div>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate">
                           {item.title}
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                          {item.excerpt || item.content?.substring(0, 200) + '...'}
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
+                          {item.excerpt || item.content?.replace(/<[^>]*>/g, '').substring(0, 200) + '...'}
                         </p>
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                           <span>👤 {item.user_profiles?.full_name || item.user_profiles?.username || 'Неизвестно'}</span>
@@ -426,54 +493,9 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <button 
-                          onClick={() => {
-                            setEditingNews(item)
-                            setShowModal('edit-news')
-                          }} 
-                          className="text-blue-600 hover:text-blue-700 p-2 hover:bg-blue-50 dark:hover:bg-gray-700 rounded transition-all"
-                          title="Редактировать"
-                        >
-                          ✏️
-                        </button>
-                        <button 
-                          onClick={async () => {
-                            if (confirm(`Переместить новость "${item.title}" в черновики?`)) {
-                              setLoading(true)
-                              try {
-                                const response = await fetch('/api/news/update', {
-                                  method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({
-                                    id: item.id,
-                                    status: 'draft'
-                                  })
-                                })
-                                const result = await response.json()
-                                if (response.ok) {
-                                  alert('✅ Новость перемещена в черновики')
-                                  await loadNews()
-                                } else {
-                                  alert('❌ Ошибка: ' + result.error)
-                                }
-                              } catch (error) {
-                                console.error('Soft delete error:', error)
-                                alert('❌ Ошибка при перемещении в черновики')
-                              } finally {
-                                setLoading(false)
-                              }
-                            }
-                          }} 
-                          className="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 dark:hover:bg-gray-700 rounded transition-all" 
-                          title="Переместить в черновики"
-                        >
-                          🗑️
-                        </button>
-                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
