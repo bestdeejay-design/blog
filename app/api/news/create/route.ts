@@ -16,9 +16,12 @@ export async function POST(request: Request) {
     if (channelIdsRaw) {
       try {
         channelIds = JSON.parse(channelIdsRaw)
+        console.log('✅ Parsed channelIds:', channelIds)
       } catch (e) {
-        console.error('Failed to parse channel_ids:', e)
+        console.error('❌ Failed to parse channel_ids:', e, 'Raw value:', channelIdsRaw)
       }
+    } else {
+      console.warn('⚠️ No channel_ids in FormData')
     }
     
     console.log('FormData:', { title, content: content?.substring(0, 50) + '...', channelIds, status })
