@@ -542,6 +542,31 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               <textarea name="content" rows={5} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" placeholder="Введите текст новости" style={{ minHeight: '120px' }} />
             </div>
             <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">📷 Медиа</label>
+              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-3 bg-white dark:bg-gray-700">
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Загрузить картинку</label>
+                  <input 
+                    type="file" 
+                    name="media_image" 
+                    accept="image/*"
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-600 dark:file:text-gray-300"
+                  />
+                  <p className="text-xs text-gray-500">Картинка загрузится в Supabase Storage</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">🎥 Ссылка на видео</label>
+                  <input 
+                    type="url" 
+                    name="media_video" 
+                    placeholder="https://youtube.com/watch?v=... или https://rutube.ru/video/..."
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-600 dark:text-white"
+                  />
+                  <p className="text-xs text-gray-500">YouTube, RuTube, VK Видео</p>
+                </div>
+              </div>
+            </div>
+            <div>
               <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Каналы</label>
               <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto bg-white dark:bg-gray-700">
                 {channels.length === 0 ? (
@@ -599,6 +624,43 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Текст новости</label>
               <textarea name="content" rows={5} defaultValue={editingNews.content} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all resize-none" style={{ minHeight: '120px' }} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">📷 Медиа (существующее)</label>
+              {editingNews.media && editingNews.media.length > 0 ? (
+                <div className="mb-3 space-y-2">
+                  {editingNews.media.map((m: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-600 rounded text-sm">
+                      {m.type === 'image' && <span>📷 Картинка</span>}
+                      {m.type === 'youtube' && <span>🎥 YouTube</span>}
+                      {m.type === 'rutube' && <span>🎥 RuTube</span>}
+                      {m.type === 'vk' && <span>🎥 VK Видео</span>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 mb-3">Нет медиа</p>
+              )}
+              <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-3 bg-white dark:bg-gray-700">
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">Загрузить новую картинку</label>
+                  <input 
+                    type="file" 
+                    name="media_image" 
+                    accept="image/*"
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-600 dark:file:text-gray-300"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">🎥 Ссылка на новое видео</label>
+                  <input 
+                    type="url" 
+                    name="media_video" 
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-600 dark:text-white"
+                  />
+                </div>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Каналы</label>
