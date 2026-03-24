@@ -58,7 +58,12 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   // Фильтрация новостей
   const getFilteredNews = () => {
     return news.filter(item => {
-      if (filterChannel !== 'all' && item.channel_id !== filterChannel) return false
+      // Фильтр по каналу - проверяем и channel_id и all_channels
+      if (filterChannel !== 'all') {
+        const hasChannel = item.channel_id === filterChannel || 
+                          (item.all_channels && item.all_channels.some((ch: any) => ch.id === filterChannel));
+        if (!hasChannel) return false;
+      }
       if (filterAuthor !== 'all' && item.author_id !== filterAuthor) return false
       if (filterStatus !== 'all' && item.status !== filterStatus) return false
       return true
