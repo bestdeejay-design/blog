@@ -303,6 +303,51 @@
       }
     }
     
+    /* Стили для форматирования текста из Quill редактора */
+    .news-content-body h1,
+    .news-content-body h2,
+    .news-content-body h3 {
+      color: var(--ink);
+      margin-top: 2em;
+      margin-bottom: 1em;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    
+    .news-content-body h1 { font-size: 2rem; }
+    .news-content-body h2 { font-size: 1.5rem; }
+    .news-content-body h3 { font-size: 1.25rem; }
+    
+    .news-content-body strong {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    
+    .news-content-body em {
+      font-style: italic;
+    }
+    
+    .news-content-body ul,
+    .news-content-body ol {
+      margin-bottom: 1.5em;
+      padding-left: 2em;
+    }
+    
+    .news-content-body li {
+      margin-bottom: 0.5em;
+      line-height: 1.7;
+    }
+    
+    .news-content-body a {
+      color: var(--primary);
+      text-decoration: underline;
+      transition: opacity 0.2s;
+    }
+    
+    .news-content-body a:hover {
+      opacity: 0.8;
+    }
+    
     .loading-more {
       text-align: center;
       padding: 20px;
@@ -367,66 +412,13 @@
       }
     }
     
-    /* News detail content styling */
+    /* News detail content styling - thumbnail image */
     .news-detail-image {
       width: 100%;
       max-height: 500px;
       object-fit: cover;
       border-radius: var(--radius);
       margin-bottom: 24px;
-    }
-    
-    .news-body {
-      line-height: 1.8;
-    }
-    
-    .news-body p {
-      margin-bottom: 1.5em;
-      font-size: 1.05rem;
-    }
-    
-    .news-body h1,
-    .news-body h2,
-    .news-body h3 {
-      color: var(--ink);
-      margin-top: 2em;
-      margin-bottom: 1em;
-      font-weight: 700;
-      line-height: 1.3;
-    }
-    
-    .news-body h1 { font-size: 2rem; }
-    .news-body h2 { font-size: 1.5rem; }
-    .news-body h3 { font-size: 1.25rem; }
-    
-    .news-body strong {
-      font-weight: 700;
-      color: var(--ink);
-    }
-    
-    .news-body em {
-      font-style: italic;
-    }
-    
-    .news-body ul,
-    .news-body ol {
-      margin-bottom: 1.5em;
-      padding-left: 2em;
-    }
-    
-    .news-body li {
-      margin-bottom: 0.5em;
-      line-height: 1.7;
-    }
-    
-    .news-body a {
-      color: var(--primary);
-      text-decoration: underline;
-      transition: opacity 0.2s;
-    }
-    
-    .news-body a:hover {
-      opacity: 0.8;
     }
   </style>
 </head>
@@ -482,7 +474,7 @@
               <span id="news-content-date"></span>
             </div>
           </div>
-          <div id="news-content-body" class="news-body"></div>
+          <div id="news-content-body" class="news-content-body"></div>
         </div>
       </article>
     </div>
