@@ -10,7 +10,7 @@ export async function GET() {
   // Максимально простой запрос - только news без связей
   const { data, error } = await supabase
     .from('news')
-    .select('id,title,content,slug,status,published_at,channel_id')
+    .select('id,title,content,excerpt,slug,status,published_at,channel_id,media,created_at,updated_at')
     .eq('status', 'published')
     .order('published_at', { ascending: false, nullsFirst: false })
     .limit(10)
