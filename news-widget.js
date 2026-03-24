@@ -114,7 +114,19 @@
         day: 'numeric'
       });
       
-      const excerpt = news.excerpt || (news.content ? news.content.substring(0, 150) + '...' : '');
+      // Use excerpt if available, otherwise generate from content
+      let excerpt = '';
+      
+      if (news.excerpt) {
+        // Use custom excerpt if provided
+        excerpt = news.excerpt;
+      } else if (news.content) {
+        // Strip HTML tags and take first 150 characters
+        const tmp = document.createElement('div');
+        tmp.innerHTML = news.content;
+        const plainText = tmp.textContent || tmp.innerText || '';
+        excerpt = plainText.substring(0, 150) + (plainText.length > 150 ? '...' : '');
+      }
       const imageUrl = news.thumbnail || null;
       
       const card = document.createElement('div');
