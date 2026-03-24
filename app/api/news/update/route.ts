@@ -5,7 +5,10 @@ export async function PUT(request: Request) {
   try {
     const { id, title, content, status, channel_ids, update_created_at } = await request.json()
 
+    console.log('📝 Update request:', { id, title: title?.substring(0, 50), channel_ids, status })
+
     if (!id) {
+      console.error('❌ ID is required')
       return NextResponse.json({ error: 'ID новости обязателен' }, { status: 400 })
     }
 
@@ -50,11 +53,19 @@ export async function PUT(request: Request) {
 
     // Обновляем каналы если переданы
     if (channel_ids && channel_ids.length > 0) {
+      console.log('🔄 Updating channels for news:', { newsId: id, channelCount: channel_ids.length, channels: channel_ids })
+      
       // Удаляем старые записи
-      await supabaseAdmin
+      const { error: deleteError } = await supabaseAdmin
         .from('news_channels')
         .delete()
         .eq('news_id', id)
+      
+      if (deleteError) {
+        console.error('❌ Error deleting old channels:', deleteError)
+      } else {
+        console.log('✅ Deleted old channel associations')
+      }
 
       // Создаем новые
       const newsChannelRecords = channel_ids.map((channelId: string) => ({
@@ -63,9 +74,17 @@ export async function PUT(request: Request) {
         published_at: updateData.status === 'published' ? new Date().toISOString() : null
       }))
 
-      await supabaseAdmin
+      const { error: insertError } = await supabaseAdmin
         .from('news_channels')
         .insert(newsChannelRecords)
+      
+      if (insertError) {
+        console.error('❌ Error creating new channels:', insertError)
+      } else {
+        console.log('✅ Created new channel associations:', newsChannelRecords.length)
+      }
+    } else {
+      console.warn('⚠️ No channel_ids provided, skipping channel update')
     }
 
     console.log('News updated successfully:', newsItem.id)

@@ -27,9 +27,9 @@ export async function POST(request: Request) {
     console.log('FormData:', { title, content: content?.substring(0, 50) + '...', channelIds, status })
 
     if (!title || channelIds.length === 0) {
-      console.error('Missing required fields:', { title, channelIds })
+      console.error('❌ Missing required fields:', { title, channelIds })
       return NextResponse.json(
-        { error: 'Заголовок и хотя бы один канал обязательны' },
+        { error: 'Заголовок и хотя бы один канал обязательны', details: { hasTitle: !!title, channelCount: channelIds.length } },
         { status: 400 }
       )
     }

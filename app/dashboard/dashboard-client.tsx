@@ -99,7 +99,7 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
         setEditingUser(null)
         // Обновляем список новостей после создания
         if (endpoint === '/api/news/create') {
-          await loadNews()
+          console.log('🔄 Reloading page to show new news...')
         }
         setTimeout(() => {
           window.location.reload()
