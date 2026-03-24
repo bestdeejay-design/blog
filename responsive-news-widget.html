@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Новости - Адаптивный Виджет</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    /* Сетка новостей */
+    .news-grid {
+      display: grid;
+      gap: 30px;
+    }
+    
+    /* Карточка новости */
+    .news-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .news-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    
+    /* Контейнер для изображения и текста */
+    .news-content {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Изображение */
+    .news-image-container {
+      width: 100%;
+      height: 0;
+      padding-bottom: 56.25%; /* 16:9 aspect ratio */
+      position: relative;
+      overflow: hidden;
+      background: #f0f0f0;
+    }
+    
+    .news-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    
+    .news-card:hover .news-image {
+      transform: scale(1.05);
+    }
+    
+    /* Текстовый блок */
+    .news-text {
+      padding: 24px;
+      flex: 1;
+    }
+    
+    .news-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1a1a1a;
+      line-height: 1.3;
+    }
+    
+    .news-excerpt {
+      font-size: 1rem;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    
+    .news-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 0.875rem;
+      color: #888;
+    }
+    
+    .news-channel {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #667eea;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    
+    .news-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    /* Индикатор загрузки */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: white;
+      font-size: 1.2rem;
+    }
+    
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: white;
+      font-size: 1.5rem;
+    }
+    
+    /* ===== АДАПТИВНОСТЬ ===== */
+    
+    /* Мобильная версия (картинка сверху) */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .news-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .news-content {
+        flex-direction: column;
+      }
+      
+      .news-image-container {
+        padding-bottom: 56.25%; /* 16:9 */
+      }
+      
+      .news-title {
+        font-size: 1.3rem;
+      }
+      
+      .news-text {
+        padding: 20px;
+      }
+    }
+    
+    /* Веб версия (картинка справа, текст обтекает) */
+    @media (min-width: 769px) {
+      .news-content {
+        flex-direction: row;
+        align-items: stretch;
+      }
+      
+      .news-image-container {
+        width: 50%;
+        max-width: 500px;
+        height: auto;
+        padding-bottom: 0;
+        flex-shrink: 0;
+      }
+      
+      .news-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 30px;
+      }
+    }
+    
+    /* Большие экраны */
+    @media (min-width: 1024px) {
+      .news-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📰 Новости</h1>
+    <div id="news-grid" class="news-grid">
+      <!-- Новости загружаются сюда -->
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
+    
+    let currentOffset = 0;
+    const limit = 12;
+    let isLoading = false;
+    let hasMore = true;
+    let allNews = [];
+    
+    async function loadNews() {
+      if (isLoading || !hasMore) return;
+      
+      isLoading = true;
+      
+      try {
+        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}`);
+        const data = await response.json();
+        
+        if (!data.success || !data.news || data.news.length === 0) {
+          if (allNews.length === 0) {
+            document.getElementById('news-grid').innerHTML = '<div class="empty">Новостей пока нет 📭</div>';
+          }
+          return;
+        }
+        
+        allNews = [...allNews, ...(data.news || [])];
+        hasMore = data.hasMore || false;
+        currentOffset += limit;
+        
+        renderNewsList(allNews);
+        
+        if (hasMore) {
+          const loader = document.createElement('div');
+          loader.id = 'loading-indicator';
+          loader.className = 'loading';
+          loader.textContent = '⏳ Загрузка...';
+          document.getElementById('news-grid').appendChild(loader);
+        }
+      } catch (error) {
+        console.error('Error loading news:', error);
+        if (allNews.length === 0) {
+          document.getElementById('news-grid').innerHTML = '<div class="empty">❌ Ошибка загрузки</div>';
+        }
+      }
+      
+      isLoading = false;
+    }
+    
+    function renderNewsList(newsList) {
+      const grid = document.getElementById('news-grid');
+      
+      // Удаляем индикатор загрузки если есть
+      const loader = document.getElementById('loading-indicator');
+      if (loader) loader.remove();
+      
+      newsList.forEach(news => {
+        const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const channelName = news.channels?.name || 'Без канала';
+        const excerpt = news.excerpt || (news.content ? news.content.substring(0, 200) + '...' : '');
+        const imageUrl = news.thumbnail || null;
+        
+        const card = document.createElement('div');
+        card.className = 'news-card';
+        card.innerHTML = `
+          <div class="news-content">
+            ${imageUrl ? `
+              <div class="news-image-container">
+                <img src="${escapeHtml(imageUrl)}" alt="" class="news-image" />
+              </div>
+            ` : ''}
+            <div class="news-text">
+              <h2 class="news-title">${escapeHtml(news.title)}</h2>
+              <p class="news-excerpt">${escapeHtml(excerpt)}</p>
+              <div class="news-meta">
+                <span class="news-channel">📺 ${escapeHtml(channelName)}</span>
+                <span class="news-date">📅 ${date}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        grid.appendChild(card);
+      });
+    }
+    
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    // Ленивая загрузка при скролле
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      if (scrollTop + windowHeight >= documentHeight - 200) {
+        loadNews();
+      }
+    });
+    
+    // Загружаем первые новости
+    document.addEventListener('DOMContentLoaded', loadNews);
+  </script>
+</body>
+</html>
