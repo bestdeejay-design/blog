@@ -16,6 +16,9 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
   const [errorModal, setErrorModal] = useState<{show: boolean, message: string, details?: string}>({ show: false, message: '', details: '' })
   const [successModal, setSuccessModal] = useState<{show: boolean, message: string}>({ show: false, message: '' })
   
+  // Theme management
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  
   // Фильтры
   const [filterChannel, setFilterChannel] = useState<string>('all')
   const [filterAuthor, setFilterAuthor] = useState<string>('all')
@@ -43,6 +46,16 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
       initQuill(editEditorRef.current, quillEdit, editingNews?.content)
     }
   }, [initialChannels, initialUsers, showModal, editingNews])
+  
+  // Theme application
+  useEffect(() => {
+    if (theme === 'light') {
+      document.body.classList.add('light')
+    } else {
+      document.body.classList.remove('light')
+    }
+    localStorage.setItem('dashboard-theme', theme)
+  }, [theme])
   
   // Initialize Quill editor
   const initQuill = async (container: HTMLDivElement, quillRef: any, initialContent: string = '') => {
@@ -297,6 +310,33 @@ export default function DashboardClient({ payload, initialChannels, initialUsers
               <span className="text-gray-700 dark:text-gray-300">
                 👤 {String(payload.username)} ({String(payload.role)})
               </span>
+              
+              {/* Theme Switcher */}
+              <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                <button
+                  onClick={() => setTheme('light')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    theme === 'light'
+                      ? 'bg-white dark:bg-gray-700 text-gray-900 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                  }`}
+                  title="Светлая тема"
+                >
+                  ☀️
+                </button>
+                <button
+                  onClick={() => setTheme('dark')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    theme === 'dark'
+                      ? 'bg-gray-900 text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                  }`}
+                  title="Тёмная тема"
+                >
+                  🌙
+                </button>
+              </div>
+              
               <form action="/api/auth/signout" method="POST">
                 <button type="submit" className="text-red-600 hover:text-red-500 font-medium">Выйти</button>
               </form>
