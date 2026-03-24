@@ -480,6 +480,15 @@
       });
       event?.target?.closest('.news-list-item')?.classList.add('active');
       
+      // Scroll to top of content panel
+      const contentPanel = document.querySelector('.news-content-panel');
+      if (contentPanel) {
+        contentPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      
+      // Update page title and meta tags for SEO
+      updatePageMetadata(news);
+      
       // Show content
       const placeholder = document.getElementById('news-content-placeholder');
       const contentContainer = document.getElementById('news-content-container');
@@ -518,6 +527,55 @@
     function escapeHtmlForAttr(text) {
       if (!text) return '';
       return text.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+    
+    // Update page metadata for SEO
+    function updatePageMetadata(news) {
+      // Update title
+      const siteTitle = 'Новости — АТМОСФЕРА';
+      document.title = news.title ? `${news.title} | ${siteTitle}` : siteTitle;
+      
+      // Update meta description
+      let metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription) {
+        metaDescription = document.createElement('meta');
+        metaDescription.name = 'description';
+        document.head.appendChild(metaDescription);
+      }
+      const excerpt = news.excerpt || (news.content ? news.content.substring(0, 160) + '...' : '');
+      metaDescription.content = stripHtml(excerpt);
+      
+      // Update Open Graph tags
+      updateOGTag('og:title', news.title);
+      updateOGTag('og:description', excerpt);
+      updateOGTag('og:type', 'article');
+      if (news.published_at) {
+        updateOGTag('article:published_time', new Date(news.published_at).toISOString());
+      }
+      if (news.thumbnail) {
+        updateOGTag('og:image', news.thumbnail);
+      }
+      
+      // Update Twitter Card
+      updateOGTag('twitter:card', 'summary_large_image');
+      updateOGTag('twitter:title', news.title);
+      updateOGTag('twitter:description', excerpt);
+    }
+    
+    function updateOGTag(property, content) {
+      let tag = document.querySelector(`meta[property="${property}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.property = property;
+        document.head.appendChild(tag);
+      }
+      tag.content = content;
+    }
+    
+    function stripHtml(html) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
     }
     
     // Handle browser back/forward
