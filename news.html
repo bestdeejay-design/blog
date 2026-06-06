@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Новости — АТМОСФЕРА</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --ink: #e2e8f0;
+      --muted: #94a3b8;
+      --primary: #06b6d4;
+      --primary-weak: #083344;
+      --ring: #0e7490;
+      --accent: #8b5cf6;
+      --accent-weak: #1e1b4b;
+      --radius: 16px;
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    .light {
+      --bg: #fcfdff;
+      --card: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --primary: #06b6b4;
+      --primary-weak: #e6fbfa;
+      --ring: #c7f8f6;
+      --accent: #7c3aed;
+      --accent-weak: #f3e8ff;
+      --border: #eef2f7;
+    }
+
+    .bright {
+      --bg: #e0f2fe;
+      --card: #ffffff;
+      --ink: #082f49;
+      --muted: #0c4a6e;
+      --primary: #0284c7;
+      --primary-weak: #bae6fd;
+      --ring: #7dd3fc;
+      --accent: #7c2d12;
+      --accent-weak: #fde68a;
+      --border: #bae6fd;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.65;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    
+    .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+    
+    /* Header */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    
+    .back-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .back-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+    
+    /* Header Navigation */
+    .header-nav {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    
+    .nav-link {
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 0.95rem;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    
+    .nav-link:hover {
+      color: var(--ink);
+      background: var(--primary-weak);
+    }
+    
+    .nav-link.active {
+      color: var(--primary);
+      background: var(--primary-weak);
+      font-weight: 600;
+    }
+    
+    /* Mobile Menu Button */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      width: 44px;
+      height: 44px;
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      transition: all 0.3s;
+    }
+    .mobile-menu-btn svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--ink);
+      transition: all 0.3s;
+    }
+    .mobile-menu-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .mobile-menu-btn.active svg {
+      stroke: white;
+    }
+    
+    /* Mobile Navigation Menu */
+    .mobile-nav-menu {
+      display: none;
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+      z-index: 999;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    
+    .mobile-nav-menu a {
+      display: block;
+      padding: 12px 20px;
+      color: var(--muted);
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .mobile-nav-menu a:hover {
+      color: var(--ink);
+      background: var(--primary-weak);
+    }
+    
+    .mobile-nav-menu a.active {
+      color: var(--primary);
+      background: var(--primary-weak);
+      font-weight: 600;
+    }
+    
+    /* Theme Switcher */
+    .theme-switcher {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      background: var(--card);
+      padding: 8px;
+      border-radius: 99px;
+      border: 2px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .theme-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--ink);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .theme-btn:hover { transform: scale(1.1); }
+    .theme-btn[data-theme="dark"] { background: #0f172a; }
+    .theme-btn[data-theme="light"] { background: #ffffff; }
+    .theme-btn[data-theme="bright"] { background: #e0f2fe; }
+    
+    /* Main Layout */
+    .news-layout {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 30px;
+      padding: 40px 0;
+      min-height: calc(100vh - 200px);
+    }
+    
+    /* News List Panel */
+    .news-list-panel {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    
+    .news-list-header {
+      margin-bottom: 20px;
+    }
+    
+    .news-list-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    
+    .news-list-subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .news-list-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .news-list-item:hover {
+      transform: translateX(4px);
+      border-color: var(--primary);
+      background: var(--primary-weak);
+    }
+    
+    .news-list-item.active {
+      border-color: var(--primary);
+      background: var(--primary-weak);
+    }
+    
+    .news-list-item-image {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: var(--accent-weak);
+    }
+    
+    .news-list-item-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+      line-height: 1.4;
+    }
+    
+    .news-list-item-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    
+    .news-channel-badge {
+      background: var(--primary-weak);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+    
+    /* News Content Panel */
+    .news-content-panel {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 40px;
+    }
+    
+    .news-content-title {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      font-weight: 900;
+      line-height: 1.2;
+      margin: 0 0 16px;
+      color: var(--ink);
+    }
+    
+    .news-content-meta {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+    
+    .news-content-body {
+      font-size: 1.1rem;
+      line-height: 1.8;
+    }
+    
+    .news-content-body p {
+      margin-bottom: 20px;
+    }
+    
+    /* Картинка в тексте новости - не более 50% с обтеканием */
+    .news-content-body img {
+      max-width: 50%;
+      height: auto;
+      border-radius: var(--radius);
+      margin: 0 0 20px 20px;
+      float: right;
+    }
+    
+    @media (max-width: 768px) {
+      .news-content-body img {
+        max-width: 100%;
+        float: none;
+        margin: 0 0 20px 0;
+      }
+    }
+    
+    /* Стили для форматирования текста из Quill редактора */
+    .news-content-body h1,
+    .news-content-body h2,
+    .news-content-body h3 {
+      color: var(--ink);
+      margin-top: 2em;
+      margin-bottom: 1em;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    
+    .news-content-body h1 { font-size: 2rem; }
+    .news-content-body h2 { font-size: 1.5rem; }
+    .news-content-body h3 { font-size: 1.25rem; }
+    
+    .news-content-body strong {
+      font-weight: 700;
+      color: var(--ink);
+    }
+    
+    .news-content-body em {
+      font-style: italic;
+    }
+    
+    .news-content-body ul,
+    .news-content-body ol {
+      margin-bottom: 1.5em;
+      padding-left: 2em;
+    }
+    
+    .news-content-body li {
+      margin-bottom: 0.5em;
+      line-height: 1.7;
+    }
+    
+    .news-content-body a {
+      color: var(--primary);
+      text-decoration: underline;
+      transition: opacity 0.2s;
+    }
+    
+    .news-content-body a:hover {
+      opacity: 0.8;
+    }
+    
+    .loading-more {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    
+    .no-news {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 1024px) {
+      .news-layout {
+        grid-template-columns: 1fr;
+      }
+      
+      .news-list-panel {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 300px;
+        height: 100vh;
+        max-height: none;
+        z-index: 999;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        border-radius: 0;
+        box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+      }
+      
+      .news-list-panel.active {
+        left: 0;
+      }
+      
+      .news-content-panel {
+        max-height: none;
+        padding: 20px;
+      }
+      
+      /* Show mobile menu button */
+      .mobile-menu-btn {
+        display: flex;
+      }
+      
+      /* Hide navigation on mobile, show in menu */
+      .header-nav {
+        display: none;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .news-content-panel {
+        padding: 24px;
+      }
+      
+      .news-list-item-image {
+        height: 120px;
+      }
+    }
+    
+    /* News detail content styling - thumbnail image */
+    .news-detail-image {
+      width: 100%;
+      max-height: 500px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="index-arental-with-news.html" class="logo">АТМОСФЕРА</a>
+        <!-- Navigation menu - EXACT copy from main site -->
+        <nav class="header-nav">
+          <a href="#services">Услуги</a>
+          <a href="#channels">Каналы</a>
+          <a href="#cases">Кейсы</a>
+          <a href="#how">Как работаем</a>
+          <a href="https://kodstudy.ru/" target="_blank">Обучение</a>
+          <a href="/job">Работа с компанией</a>
+          <a href="#contact">Контакты</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Theme Switcher - separate from header -->
+  <div class="theme-switcher">
+    <button class="theme-btn" data-theme="dark" title="Тёмная тема"></button>
+    <button class="theme-btn" data-theme="light" title="Светлая тема"></button>
+    <button class="theme-btn" data-theme="bright" title="Яркая тема"></button>
+  </div>
+  
+  <!-- Mobile Menu Button with SVG Icon -->
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </button>
+  
+  <!-- Mobile Navigation Menu - EXACT copy from main site -->
+  <div class="mobile-nav-menu" id="mobileNavMenu">
+    <a href="#services" onclick="toggleMobileMenu()">Услуги</a>
+    <a href="/job" onclick="toggleMobileMenu()">Работа с компанией</a>
+    <a href="#channels" onclick="toggleMobileMenu()">Каналы</a>
+    <a href="#cases" onclick="toggleMobileMenu()">Кейсы</a>
+    <a href="#how" onclick="toggleMobileMenu()">Как работаем</a>
+    <a href="https://kodstudy.ru/" target="_blank" onclick="toggleMobileMenu()">Обучение</a>
+    <a href="#contact" onclick="toggleMobileMenu()">Контакты</a>
+  </div>
+
+  <main class="container">
+    <div class="news-layout">
+      <!-- Left Panel: News List -->
+      <aside class="news-list-panel">
+        <div class="news-list-header">
+          <h1 class="news-list-title">Все новости</h1>
+          <p class="news-list-subtitle">Будьте в курсе последних событий</p>
+        </div>
+        <div id="news-list-container" class="news-list">
+          <!-- Новости загружаются сюда -->
+        </div>
+      </aside>
+
+      <!-- Right Panel: News Content -->
+      <article class="news-content-panel">
+        <div id="news-content-placeholder" style="text-align:center;padding:60px 20px;color:var(--muted);">
+          <p style="font-size:1.2rem;">Выберите новость из списка слева</p>
+          <p style="margin-top:12px;font-size:0.9rem;">или нажмите на первую новость</p>
+        </div>
+        <div id="news-content-container" style="display:none;">
+          <div class="news-content-header">
+            <h1 id="news-content-title" class="news-content-title"></h1>
+            <div class="news-content-meta">
+              <span id="news-content-date"></span>
+            </div>
+          </div>
+          <div id="news-content-body" class="news-content-body"></div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <script>
+    const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
+    // Используем ID канала из базы (замени на актуальный)
+    const CHANNEL_ID = '52b8077c-d760-47f2-bec8-f130c668d50f'; // канал "атмосфера" (arental)
+    
+    let currentOffset = 0;
+    const limit = 20;
+    let isLoading = false;
+    let hasMore = true;
+    let allNews = [];
+    let selectedNewsId = null;
+    
+    // Get news ID from URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialNewsId = urlParams.get('news');
+    
+    async function loadNews() {
+      if (isLoading || !hasMore) return;
+      
+      isLoading = true;
+      const container = document.getElementById('news-list-container');
+      
+      try {
+        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}&channel_id=${CHANNEL_ID}`);
+        const data = await response.json();
+        
+        if (!data.success || !data.news || data.news.length === 0) {
+          if (allNews.length === 0) {
+            container.innerHTML = '<div class="no-news">Новостей пока нет 📭</div>';
+          }
+          return;
+        }
+        
+        allNews = [...allNews, ...(data.news || [])];
+        hasMore = data.hasMore || false;
+        currentOffset += limit;
+        
+        renderNewsList();
+        
+        // Auto-select news
+        if (!selectedNewsId && allNews.length > 0) {
+          // Если есть news в URL - выбираем его, иначе первую (самую свежую)
+          const newsToSelect = initialNewsId 
+            ? allNews.find(n => n.id === initialNewsId) || allNews[0]
+            : allNews[0]; // Самая свежая (первая в списке)
+          
+          selectNews(newsToSelect);
+        }
+        
+        // Add "Load More" indicator
+        if (hasMore) {
+          const loader = document.createElement('div');
+          loader.id = 'loading-more-indicator';
+          loader.className = 'loading-more';
+          loader.textContent = '⏳ Загрузка...';
+          container.appendChild(loader);
+          
+          // Lazy load on scroll
+          const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMore) {
+              loader.remove();
+              loadNews();
+            }
+          }, { threshold: 0.1 });
+          
+          observer.observe(loader);
+        }
+      } catch (error) {
+        console.error('Error loading news:', error);
+        if (allNews.length === 0) {
+          container.innerHTML = '<div class="no-news">❌ Ошибка загрузки новостей</div>';
+        }
+      }
+      
+      isLoading = false;
+    }
+    
+    function renderNewsList() {
+      const container = document.getElementById('news-list-container');
+      const existingPlaceholder = container.querySelector('.no-news');
+      if (existingPlaceholder) existingPlaceholder.remove();
+      
+      const loader = document.getElementById('loading-more-indicator');
+      if (loader) loader.remove();
+      
+      allNews.forEach(news => {
+        const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const channelName = news.channels?.name || 'Без канала';
+        const imageUrl = news.thumbnail || null;
+              
+        const item = document.createElement('div');
+        item.className = 'news-list-item';
+        if (news.id === selectedNewsId) item.classList.add('active');
+        item.onclick = () => selectNews(news);
+              
+        let html = '';
+        if (imageUrl) {
+          html += `<img src="${escapeHtml(imageUrl)}" alt="" class="news-list-item-image" />`;
+        }
+        html += `<h3 class="news-list-item-title">${escapeHtml(news.title)}</h3>`;
+        html += '<div class="news-list-item-meta">';
+        // Убираем канал - мы уже на канале arental
+        html += `<span>📅 ${date}</span>`;
+        html += '</div>';
+        
+        item.innerHTML = html;
+        container.appendChild(item);
+      });
+    }
+    
+    window.selectNews = function(news) {
+      selectedNewsId = news.id;
+      
+      // Update URL
+      const newUrl = `${window.location.pathname}?news=${news.id}`;
+      window.history.pushState({ newsId: news.id }, '', newUrl);
+      
+      // Update active state in list
+      document.querySelectorAll('.news-list-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      event?.target?.closest('.news-list-item')?.classList.add('active');
+      
+      // Scroll to top of page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Update page title and meta tags for SEO
+      updatePageMetadata(news);
+      
+      // Show content
+      const placeholder = document.getElementById('news-content-placeholder');
+      const contentContainer = document.getElementById('news-content-container');
+      const titleEl = document.getElementById('news-content-title');
+      const dateEl = document.getElementById('news-content-date');
+      const bodyEl = document.getElementById('news-content-body');
+      
+      const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      // Убираем канал - мы уже на канале arental
+      titleEl.textContent = news.title;
+      dateEl.textContent = '📅 ' + date;
+      
+      // Check if content contains HTML tags from Quill editor
+      const hasHtmlTags = /<[a-z][\s\S]*>/i.test(news.content || '');
+      
+      // DEBUG: Log to see what we're getting
+      console.log('📰 News content:', news.content?.substring(0, 200) + '...');
+      console.log('🔍 Has HTML tags:', hasHtmlTags);
+      
+      let html = '';
+      
+      // Add thumbnail image if present
+      if (news.thumbnail) {
+        html += '<img src="' + escapeHtmlForAttr(news.thumbnail) + '" alt="" class="news-detail-image" />';
+      }
+      
+      if (hasHtmlTags) {
+        // Content already has HTML formatting from Quill - clean up extra spacing
+        let cleanedContent = news.content || ''
+        
+        // Remove empty paragraphs that Quill adds for spacing
+        // Quill creates <p><br></p> for line breaks which cause huge margins
+        cleanedContent = cleanedContent
+          .replace(/<p><br\s*\/?>|<br\s*\/?>|<p>&nbsp;<\/p>|<p\s*>\s*<\/p>/gi, '')
+          .replace(/<p><\/p>/g, '');
+        
+        console.log('🧹 Cleaned content:', cleanedContent?.substring(0, 200) + '...');
+        html += cleanedContent;
+      } else {
+        // Plain text - split into paragraphs
+        const paragraphs = (news.content || '').split('\n\n').filter(p => p.trim());
+        html += paragraphs.map(p => '<p>' + escapeHtml(p) + '</p>').join('');
+      }
+      
+      bodyEl.innerHTML = html;
+      
+      placeholder.style.display = 'none';
+      contentContainer.style.display = 'block';
+    };
+    
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+    
+    function escapeHtmlForAttr(text) {
+      if (!text) return '';
+      return text.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+    
+    // Update page metadata for SEO
+    function updatePageMetadata(news) {
+      // Update title
+      const siteTitle = 'Новости — АТМОСФЕРА';
+      document.title = news.title ? `${news.title} | ${siteTitle}` : siteTitle;
+      
+      // Update meta description
+      let metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription) {
+        metaDescription = document.createElement('meta');
+        metaDescription.name = 'description';
+        document.head.appendChild(metaDescription);
+      }
+      const excerpt = news.excerpt || (news.content ? news.content.substring(0, 160) + '...' : '');
+      metaDescription.content = stripHtml(excerpt);
+      
+      // Update Open Graph tags
+      updateOGTag('og:title', news.title);
+      updateOGTag('og:description', excerpt);
+      updateOGTag('og:type', 'article');
+      if (news.published_at) {
+        updateOGTag('article:published_time', new Date(news.published_at).toISOString());
+      }
+      if (news.thumbnail) {
+        updateOGTag('og:image', news.thumbnail);
+      }
+      
+      // Update Twitter Card
+      updateOGTag('twitter:card', 'summary_large_image');
+      updateOGTag('twitter:title', news.title);
+      updateOGTag('twitter:description', excerpt);
+    }
+    
+    function updateOGTag(property, content) {
+      let tag = document.querySelector(`meta[property="${property}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.property = property;
+        document.head.appendChild(tag);
+      }
+      tag.content = content;
+    }
+    
+    function stripHtml(html) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    }
+    
+    // Handle browser back/forward
+    window.addEventListener('popstate', (event) => {
+      if (event.state && event.state.newsId) {
+        const news = allNews.find(n => n.id === event.state.newsId);
+        if (news) selectNews(news);
+      }
+    });
+    
+    // Load news on page load
+    document.addEventListener('DOMContentLoaded', loadNews);
+    
+    // Mobile menu toggle
+    window.toggleMobileMenu = function() {
+      const menuBtn = document.querySelector('.mobile-menu-btn');
+      const navMenu = document.getElementById('mobileNavMenu');
+      menuBtn.classList.toggle('active');
+      if (navMenu.style.display === 'block') {
+        navMenu.style.display = 'none';
+      } else {
+        navMenu.style.display = 'block';
+      }
+    };
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const menuBtn = document.querySelector('.mobile-menu-btn');
+      const navMenu = document.getElementById('mobileNavMenu');
+      if (!menuBtn.contains(e.target) && !navMenu.contains(e.target)) {
+        menuBtn.classList.remove('active');
+        navMenu.style.display = 'none';
+      }
+    });
+    
+    // ===== THEME SWITCHER =====
+    (function() {
+      // Get theme from URL or localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      let currentTheme = urlParams.get('theme') || localStorage.getItem('theme') || 'dark';
+      
+      // Apply theme
+      function applyTheme(theme) {
+        document.documentElement.className = theme;
+        localStorage.setItem('theme', theme);
+        // Update URL without reloading
+        const url = new URL(window.location);
+        url.searchParams.set('theme', theme);
+        window.history.replaceState({}, '', url);
+      }
+      
+      applyTheme(currentTheme);
+      
+      // Theme switcher buttons
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const theme = btn.getAttribute('data-theme');
+          applyTheme(theme);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

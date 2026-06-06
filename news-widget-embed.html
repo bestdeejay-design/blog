@@ -1,0 +1,220 @@
+<!-- NEWS WIDGET FOR ARENTAL -->
+<!-- Вставить после <div class="container"> в нужной секции -->
+
+<style>
+  /* ===== NEWS WIDGET STYLES ===== */
+  .news-widget-section {
+    padding: 56px 0;
+    border-top: 1px solid var(--border);
+  }
+  
+  .news-grid-arental {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+    margin-top: 16px;
+  }
+  
+  .news-card-arental {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .news-card-arental:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 42px rgba(0,0,0,.15);
+  }
+  
+  .news-image-arental {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: var(--primary-weak);
+  }
+  
+  .news-content-arental {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .news-title-arental {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  
+  .news-excerpt-arental {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex-grow: 1;
+  }
+  
+  .news-meta-arental {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  
+  .news-date-arental {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .news-loading-arental {
+    text-align: center;
+    padding: 30px;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+  
+  .news-empty-arental {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+  
+  @media (max-width: 768px) {
+    .news-grid-arental {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div id="news-widget-container" style="margin-top: 16px;">
+  <div id="news-grid-arental" class="news-grid-arental">
+    <!-- Новости загружаются сюда -->
+  </div>
+</div>
+
+<script>
+  (function() {
+    const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
+    // Используем ID канала из базы (замени на актуальный)
+    const CHANNEL_ID = '52b8077c-d760-47f2-bec8-f130c668d50f'; // канал "атмосфера" (arental)
+    
+    let currentOffset = 0;
+    const limit = 12; // Показываем до 12 новостей на главной
+    let isLoading = false;
+    let hasMore = true;
+    let allNews = [];
+    
+    async function loadNews() {
+      if (isLoading) return;
+      
+      isLoading = true;
+      const container = document.getElementById('news-grid-arental');
+      
+      try {
+        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}&channel_id=${CHANNEL_ID}`);
+        const data = await response.json();
+        
+        if (!data.success || !data.news || data.news.length === 0) {
+          if (allNews.length === 0) {
+            container.innerHTML = '<div class="news-empty-arental">Новостей пока нет 📭</div>';
+          }
+          return;
+        }
+        
+        allNews = [...allNews, ...(data.news || [])];
+        hasMore = data.hasMore || false;
+        currentOffset += limit;
+        
+        renderNewsList(allNews);
+        
+        // Добавляем кнопку "Все новости" если это главная страница
+        if (allNews.length > 0) {
+          const viewAllBtn = document.createElement('div');
+          viewAllBtn.style.cssText = 'text-align:center;margin-top:24px;';
+          // Используем абсолютный путь для GitHub Pages
+          const newsPageUrl = window.location.pathname.includes('index-arental-with-news') 
+            ? 'news.html' 
+            : 'blog/news.html';
+          viewAllBtn.innerHTML = '<a href="' + newsPageUrl + '" class="btn btn-primary" style="display:inline-block;text-decoration:none;">📰 Все новости →</a>';
+          document.getElementById('news-widget-container').appendChild(viewAllBtn);
+        }
+      } catch (error) {
+        console.error('Error loading news:', error);
+        if (allNews.length === 0) {
+          container.innerHTML = '<div class="news-empty-arental">❌ Ошибка загрузки новостей</div>';
+        }
+      }
+      
+      isLoading = false;
+    }
+    
+    function renderNewsList(newsList) {
+      const container = document.getElementById('news-grid-arental');
+      container.innerHTML = '';
+      
+      newsList.forEach(news => {
+        const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const excerpt = news.excerpt || (news.content ? news.content.substring(0, 150) + '...' : '');
+        const imageUrl = news.thumbnail || null;
+        
+        const card = document.createElement('div');
+        card.className = 'news-card-arental';
+        card.onclick = () => openNewsModal(news);
+        card.innerHTML = `
+          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="" class="news-image-arental" />` : ''}
+          <div class="news-content-arental">
+            <h3 class="news-title-arental">${escapeHtml(news.title)}</h3>
+            <p class="news-excerpt-arental">${escapeHtml(excerpt)}</p>
+            <div class="news-meta-arental">
+              <span class="news-date-arental">📅 ${date}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+    
+    window.loadMoreNews = function() {
+      const btn = document.getElementById('news-load-more-arental');
+      if (btn) btn.remove();
+      loadNews();
+    };
+    
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    // Загружаем новости при загрузке страницы
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadNews);
+    } else {
+      loadNews();
+    }
+  })();
+</script>

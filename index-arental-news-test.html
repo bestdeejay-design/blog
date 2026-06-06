@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>АТМОСФЕРА — Креативное digital‑агентство (TEST NEWS)</title>
+  <style>
+    /* —— Design tokens —— */
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --ink: #e2e8f0;
+      --muted: #94a3b8;
+      --primary: #06b6d4;
+      --primary-weak: #083344;
+      --ring: #0e7490;
+      --accent: #8b5cf6;
+      --accent-weak: #1e1b4b;
+      --radius: 16px;
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      --border: rgba(255, 255, 255, 0.1);
+      --header-bg: rgba(15, 23, 42, 0.8);
+      --header-border: var(--border);
+    }
+
+    .light {
+      --bg: #fcfdff;
+      --card: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --primary: #06b6b4;
+      --primary-weak: #e6fbfa;
+      --ring: #c7f8f6;
+      --accent: #7c3aed;
+      --accent-weak: #f3e8ff;
+      --border: #eef2f7;
+      --header-bg: rgba(252, 253, 255, 0.8);
+      --header-border: #eef2f7;
+    }
+
+    .bright {
+      --bg: #e0f2fe;
+      --card: #ffffff;
+      --ink: #082f49;
+      --muted: #0c4a6e;
+      --primary: #0284c7;
+      --primary-weak: #bae6fd;
+      --ring: #7dd3fc;
+      --accent: #7c2d12;
+      --accent-weak: #fde68a;
+      --border: #bae6fd;
+      --header-bg: rgba(224, 242, 254, 0.8);
+      --header-border: #bae6fd;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.65;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    .theme-switcher {
+      position: fixed;
+      top: 20px;
+      right: 70px;
+      z-index: 100;
+      display: flex;
+      gap: 8px;
+    }
+    .theme-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--ink);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .theme-btn:hover { transform: scale(1.1); }
+    .theme-btn[data-theme="dark"] { background: #0f172a; }
+    .theme-btn[data-theme="light"] { background: #ffffff; }
+    .theme-btn[data-theme="bright"] { background: #e0f2fe; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 6vw; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--header-border);
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+    .logo {
+      font-weight: 900;
+      letter-spacing: .5px;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    nav { display: flex; gap: 20px; }
+    nav a { color: var(--muted); text-decoration: none; font-weight: 700; font-size: 14px; }
+    main { display: block; }
+    .section { padding: 56px 0; }
+    .section + .section { border-top: 1px solid var(--border); }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 10px;
+      background: var(--primary-weak);
+      color: var(--primary);
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .4px;
+    }
+    .h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.15; margin: 10px 0 12px; }
+    .h2 { font-size: clamp(24px, 4vw, 32px); line-height: 1.2; margin: 0; }
+    .lead { color: var(--muted); font-size: clamp(16px, 2.5vw, 18px); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 0 0 0 rgba(6,182,180,0);
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-ghost { background: var(--card); border: 2px solid var(--border); }
+    .btn:focus { outline: none; box-shadow: 0 0 0 6px var(--ring); }
+    .kicker { color: var(--muted); margin-top: 8px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 16px 42px rgba(0,0,0,.15); }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+
+    /* ===== NEWS WIDGET STYLES ===== */
+    .news-widget-container {
+      margin-top: 16px;
+    }
+    
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    
+    .news-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .news-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 42px rgba(0,0,0,.2);
+    }
+    
+    .news-image {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: var(--primary-weak);
+    }
+    
+    .news-content {
+      padding: 16px;
+    }
+    
+    .news-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+    
+    .news-excerpt {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .news-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    
+    .news-channel {
+      background: var(--primary-weak);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+    
+    .news-date {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    
+    @media (max-width: 768px) {
+      .news-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Theme Switcher -->
+  <div class="theme-switcher">
+    <button class="theme-btn" data-theme="dark" title="Dark"></button>
+    <button class="theme-btn" data-theme="light" title="Light"></button>
+    <button class="theme-btn" data-theme="bright" title="Bright"></button>
+  </div>
+
+  <header>
+    <div class="container">
+      <div class="nav">
+        <div class="logo">АТМОСФЕРА</div>
+        <nav>
+          <a href="#hero">Главная</a>
+          <a href="#services">Услуги</a>
+          <a href="#cases">Кейсы</a>
+          <a href="#contact">Контакты</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="hero" class="section">
+      <div class="container">
+        <div class="grid-2">
+          <div>
+            <span class="eyebrow">Digital‑агентство полного цикла</span>
+            <h1 class="h1">Превращаем трафик в деньги</h1>
+            <p class="lead">Разрабатываем CRM, настраиваем рекламу и автоматизируем маркетинг</p>
+            <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap">
+              <button class="btn btn-primary">Обсудить проект</button>
+              <button class="btn btn-ghost">Смотреть кейсы</button>
+            </div>
+          </div>
+          <div class="card" style="display:flex;align-items:center;justify-content:center">
+            <div style="text-align:center">
+              <div style="font-size:64px">🚀</div>
+              <p style="margin-top:12px;color:var(--muted)">Рост лидов в 2–5 раз</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEWS WIDGET SECTION -->
+    <section class="section">
+      <div class="container">
+        <span class="eyebrow">Новости</span>
+        <h2 class="h2">Последние обновления</h2>
+        <p class="kicker">Будьте в курсе наших достижений и инноваций</p>
+        
+        <div class="news-widget-container">
+          <div id="news-grid" class="news-grid">
+            <!-- Новости загружаются сюда -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="services" class="section">
+      <div class="container">
+        <span class="eyebrow">Услуги</span>
+        <h2 class="h2">Что мы делаем</h2>
+        <p class="kicker">Шесть направлений — единая система роста</p>
+        <div class="grid-3" style="margin-top:16px">
+          <div class="card"><strong>Разработка CRM</strong><p class="small">Логика под ваши процессы, интеграции с 1С/телефонией/платежами</p></div>
+          <div class="card"><strong>Лидогенерация</strong><p class="small">Таргет, контекст, CPA‑сети и лид‑воронки</p></div>
+          <div class="card"><strong>Автоматизация потоков</strong><p class="small">Правила, скрипты, автоперераспределение бюджетов</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ===== THEME SWITCHER =====
+    const themeBtns = document.querySelectorAll('.theme-btn');
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.body.classList.add(savedTheme);
+    
+    themeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const theme = btn.dataset.theme;
+        document.body.className = theme;
+        localStorage.setItem('theme', theme);
+      });
+    });
+
+    // ===== NEWS WIDGET =====
+    const API_URL = 'https://blog-three-opal-85.vercel.app/api/news-simple';
+    
+    let currentOffset = 0;
+    const limit = 6; // Показываем 6 новостей на главной
+    let isLoading = false;
+    let hasMore = true;
+    let allNews = [];
+    
+    async function loadNews() {
+      if (isLoading || !hasMore) return;
+      
+      isLoading = true;
+      const container = document.getElementById('news-grid');
+      
+      try {
+        const response = await fetch(`${API_URL}?limit=${limit}&offset=${currentOffset}`);
+        const data = await response.json();
+        
+        if (!data.success || !data.news || data.news.length === 0) {
+          if (allNews.length === 0) {
+            container.innerHTML = '<div class="empty">Новостей пока нет 📭</div>';
+          }
+          return;
+        }
+        
+        allNews = [...allNews, ...(data.news || [])];
+        hasMore = data.hasMore || false;
+        currentOffset += limit;
+        
+        renderNewsList(allNews);
+      } catch (error) {
+        console.error('Error loading news:', error);
+        if (allNews.length === 0) {
+          container.innerHTML = '<div class="empty">❌ Ошибка загрузки новостей</div>';
+        }
+      }
+      
+      isLoading = false;
+    }
+    
+    function renderNewsList(newsList) {
+      const container = document.getElementById('news-grid');
+      container.innerHTML = '';
+      
+      newsList.forEach(news => {
+        const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        const channelName = news.channels?.name || 'Без канала';
+        const excerpt = news.excerpt || (news.content ? news.content.substring(0, 150) + '...' : '');
+        const imageUrl = news.thumbnail || null;
+        
+        const item = document.createElement('div');
+        item.className = 'news-item';
+        item.innerHTML = `
+          ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="" class="news-image" />` : ''}
+          <div class="news-content">
+            <h3 class="news-title">${escapeHtml(news.title)}</h3>
+            <p class="news-excerpt">${escapeHtml(excerpt)}</p>
+            <div class="news-meta">
+              <span class="news-channel">📺 ${escapeHtml(channelName)}</span>
+              <span class="news-date">📅 ${date}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+    
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    // Загружаем новости при загрузке страницы
+    document.addEventListener('DOMContentLoaded', loadNews);
+  </script>
+</body>
+</html>

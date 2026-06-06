@@ -1,0 +1,1297 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { Modal, StatCard } from './ui-components'
+
+export default function DashboardClient({ payload, initialChannels, initialUsers }: any) {
+  const [activeTab, setActiveTab] = useState<'news' | 'channels' | 'users' | 'analytics'>('news')
+  const [channels, setChannels] = useState([])
+  const [users, setUsers] = useState([])
+  const [news, setNews] = useState<any[]>([])
+  const [showModal, setShowModal] = useState<string | null>(null)
+  const [editingUser, setEditingUser] = useState<any>(null)
+  const [editingNews, setEditingNews] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [errorModal, setErrorModal] = useState<{show: boolean, message: string, details?: string}>({ show: false, message: '', details: '' })
+  const [successModal, setSuccessModal] = useState<{show: boolean, message: string}>({ show: false, message: '' })
+  
+  // Theme management - read from localStorage synchronously to prevent flash
+  const getInitialTheme = (): 'dark' | 'light' => {
+    if (typeof window === 'undefined') return 'dark'
+    const saved = localStorage.getItem('dashboard-theme')
+    console.log('🎨 Initial theme load:', saved)
+    return (saved === 'light' || saved === 'dark') ? saved as 'dark' | 'light' : 'dark'
+  }
+  
+  const [theme, setTheme] = useState<'dark' | 'light'>(getInitialTheme)
+  
+  // Фильтры
+  const [filterChannel, setFilterChannel] = useState<string>('all')
+  const [filterAuthor, setFilterAuthor] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
+  
+  // Refs for Quill editors
+  const createEditorRef = useRef<HTMLDivElement>(null)
+  const editEditorRef = useRef<HTMLDivElement>(null)
+  const quillCreate = useRef<any>(null)
+  const quillEdit = useRef<any>(null)
+
+  // Hydration fix: wait for mount before rendering
+  useEffect(() => {
+    setMounted(true)
+    setChannels(initialChannels || [])
+    setUsers(initialUsers || [])
+    // Load news on mount
+    loadNews()
+  }, [])
+  
+  // Initialize Quill editors when modals open
+  useEffect(() => {
+    console.log('🔍 Checking Quill initialization...')
+    console.log('  showModal:', showModal)
+    console.log('  createEditorRef.current:', !!createEditorRef.current)
+    console.log('  editEditorRef.current:', !!editEditorRef.current)
+    console.log('  quillCreate.current:', !!quillCreate.current)
+    console.log('  quillEdit.current:', !!quillEdit.current)
+      
+    if (showModal === 'news' && createEditorRef.current && !quillCreate.current) {
+      console.log('📝 Initializing Quill for CREATE')
+      initQuill(createEditorRef.current, quillCreate)
+    }
+    if (showModal === 'edit-news' && editEditorRef.current && !quillEdit.current) {
+      console.log('✏️ Initializing Quill for EDIT')
+      console.log('📄 Content to load:', editingNews?.content?.substring(0, 100))
+      console.log('📊 Status:', editingNews?.status)
+      initQuill(editEditorRef.current, quillEdit, editingNews?.content || '', '#edit-toolbar')
+    }
+  }, [showModal, editingNews])
+  
+  // Theme application - use 'dark' class for Tailwind compatibility
+  useEffect(() => {
+    console.log('🎨 Switching theme to:', theme)
+    if (theme === 'dark') {
+      // Dark theme = add .dark class for Tailwind
+      document.body.classList.add('dark')
+      document.body.classList.remove('light')
+      console.log('✅ Added .dark class, removed .light')
+    } else {
+      // Light theme = remove .dark and add .light
+      document.body.classList.remove('dark')
+      document.body.classList.add('light')
+      console.log('✅ Removed .dark, added .light')
+    }
+    localStorage.setItem('dashboard-theme', theme)
+  }, [theme])
+  
+  // Initialize Quill editor
+  const initQuill = async (container: HTMLDivElement, quillRef: any, initialContent: string = '', toolbarSelector: string = '#create-toolbar') => {
+    // Dynamically load Quill CSS
+    if (!document.querySelector('link[href*="quill.snow.css"]')) {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css'
+      document.head.appendChild(link)
+    }
+    
+    // Dynamically load Quill JS
+    if (!(window as any).Quill) {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.quilljs.com/1.3.6/quill.js'
+      script.async = true
+      script.onload = () => {
+        const Quill = (window as any).Quill
+        quillRef.current = new Quill(container, {
+          theme: 'snow',
+          modules: {
+            // Use external toolbar container defined in JSX
+            toolbar: toolbarSelector
+          }
+        })
+        
+        if (initialContent) {
+          quillRef.current.root.innerHTML = initialContent
+        }
+      }
+      document.body.appendChild(script)
+    } else {
+      const Quill = (window as any).Quill
+      quillRef.current = new Quill(container, {
+        theme: 'snow',
+        modules: {
+          // Use external toolbar container defined in JSX
+          toolbar: toolbarSelector
+        }
+      })
+      
+      if (initialContent) {
+        quillRef.current.root.innerHTML = initialContent
+      }
+    }
+  }
+
+  const loadNews = async () => {
+    try {
+      console.log('Loading news...')
+      const response = await fetch('/api/news')
+      
+      // Проверяем что ответ JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('❌ Non-JSON response from /api/news')
+        return
+      }
+      
+      const result = await response.json()
+      if (response.ok) {
+        setNews(result.news || [])
+        console.log(`✅ Loaded ${result.news?.length || 0} news items`)
+      } else {
+        console.error('Failed to load news:', result.error)
+      }
+    } catch (error) {
+      console.error('Error loading news:', error)
+    }
+  }
+  
+  // Подсчет статистики
+  const getNewsCountByChannel = (channelId: string) => {
+    return news.filter(n => n.channel_id === channelId).length
+  }
+  
+  const getNewsCountByAuthor = (authorId: string) => {
+    return news.filter(n => n.author_id === authorId).length
+  }
+  
+  // Фильтрация новостей
+  const getFilteredNews = () => {
+    return news.filter(item => {
+      // Фильтр по каналу - проверяем и channel_id и all_channels
+      if (filterChannel !== 'all') {
+        const hasChannel = item.channel_id === filterChannel || 
+                          (item.all_channels && item.all_channels.some((ch: any) => ch.id === filterChannel));
+        if (!hasChannel) return false;
+      }
+      if (filterAuthor !== 'all' && item.author_id !== filterAuthor) return false
+      if (filterStatus !== 'all' && item.status !== filterStatus) return false
+      return true
+    })
+  }
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="text-gray-600">Загрузка...</div>
+    </div>
+  }
+
+  const handleSubmit = async (endpoint: string, formData: FormData | any, onSuccess: () => void) => {
+    setLoading(true)
+    try {
+      console.log('🚀 Submit to:', endpoint)
+      console.log('📋 FormData type:', formData instanceof FormData ? 'FormData' : 'JSON')
+      
+      if (formData instanceof FormData) {
+        console.log('📦 FormData contents:')
+        for (let [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`)
+          } else {
+            console.log(`  ${key}: ${String(value).substring(0, 200)}`)
+          }
+        }
+      } else {
+        console.log('📦 JSON data:', formData)
+      }
+      
+      const response = await fetch(endpoint, {
+        method: endpoint === '/api/news/create' ? 'POST' : 'PUT', // POST для создания, PUT для обновления
+        body: formData instanceof FormData ? formData : JSON.stringify(formData),
+        // Для FormData НЕ передаём заголовок Content-Type - браузер сам установит multipart/form-data с boundary
+        headers: formData instanceof FormData ? {} : { 'Content-Type': 'application/json' }
+      })
+      
+      console.log('📥 Response status:', response.status)
+      console.log('📥 Response headers:', response.headers.get('content-type'))
+      
+      // Проверяем что ответ JSON
+      const contentType = response.headers.get('content-type')
+      let result
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          result = await response.json()
+          console.log('📥 Response:', response.status, result)
+        } catch (parseError) {
+          console.error('❌ Failed to parse JSON:', parseError)
+          const text = await response.text()
+          throw new Error('Ошибка парсинга ответа: ' + text.substring(0, 100))
+        }
+      } else {
+        // Пытаемся получить текст ошибки
+        const text = await response.text()
+        console.error('❌ Non-JSON response:', text.substring(0, 500))
+        throw new Error('Сервер вернул некорректный ответ: ' + text.substring(0, 100))
+      }
+      
+      if (response.ok) {
+        console.log('✅ Success!')
+        setSuccessModal({ show: true, message: '✅ Успешно!' })
+        onSuccess()
+        setShowModal(null)
+        setEditingUser(null)
+        // Обновляем список новостей после создания
+        if (endpoint === '/api/news/create') {
+          console.log('🔄 Reloading page to show new news...')
+        }
+        // Сохраняем текущую тему перед перезагрузкой
+        const currentTheme = theme
+        console.log('💾 Saving theme before reload:', currentTheme)
+        localStorage.setItem('dashboard-theme', currentTheme)
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
+      } else {
+        console.error('❌ Error:', result)
+        const errorMessage = result.error || result.message || 'Неизвестная ошибка'
+        // Показываем модальное окно с ошибкой вместо alert
+        setErrorModal({
+          show: true,
+          message: errorMessage,
+          details: JSON.stringify(result, null, 2)
+        })
+      }
+    } catch (error: any) {
+      console.error('💥 Exception:', error)
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      })
+      setErrorModal({
+        show: true,
+        message: `Ошибка: ${error.message}`,
+        details: error.stack
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-primary">
+      {/* Header */}
+      <nav className="bg-secondary shadow-lg border-b border-primary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-2xl font-bold text-primary">📊 Админ-панель</h1>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setActiveTab('news')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeTab === 'news'
+                      ? 'bg-accent-primary text-white'
+                      : 'text-secondary hover-bg-tertiary'
+                  }`}
+                >
+                  📰 Новости
+                </button>
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeTab === 'analytics'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-secondary hover-bg-tertiary'
+                  }`}
+                >
+                  📊 Аналитика
+                </button>
+                <button
+                  onClick={() => setActiveTab('channels')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeTab === 'channels'
+                      ? 'bg-green-600 text-white'
+                      : 'text-secondary hover-bg-tertiary'
+                  }`}
+                >
+                  📺 Каналы
+                </button>
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeTab === 'users'
+                      ? 'bg-purple-600 text-white'
+                      : 'text-secondary hover-bg-tertiary'
+                  }`}
+                >
+                  👥 Пользователи
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-secondary">
+                👤 {String(payload.username)} ({String(payload.role)})
+              </span>
+              
+              {/* Theme Switcher */}
+              <div className="flex items-center space-x-2 bg-secondary rounded-lg p-1 border border-primary">
+                <button
+                  onClick={() => {
+                    console.log('☀️ Clicked')
+                    setTheme('light')
+                  }}
+                  className={`w-8 h-8 rounded-md transition-all flex items-center justify-center ${
+                    theme === 'light'
+                      ? 'bg-primary text-primary shadow-sm'
+                      : 'text-secondary hover-text-primary'
+                  }`}
+                  title="Светлая тема"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('🌙 Clicked')
+                    setTheme('dark')
+                  }}
+                  className={`w-8 h-8 rounded-md transition-all flex items-center justify-center ${
+                    theme === 'dark'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-secondary hover-text-primary'
+                  }`}
+                  title="Тёмная тема"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                  </svg>
+                </button>
+              </div>
+              
+              <form action="/api/auth/signout" method="POST">
+                <button type="submit" className="text-red-600 hover:text-red-500 font-medium">Выйти</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto py-6 px-4">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <StatCard title="Каналы" count={channels.length} color="green" icon="📺" />
+          <StatCard title="Пользователи" count={users.length} color="purple" icon="👥" />
+          <StatCard title="Активность" count={channels.length + users.length} color="indigo" icon="⚡" />
+        </div>
+
+        {/* News Tab */}
+        {activeTab === 'news' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-primary">📰 Новости</h2>
+              <button
+                onClick={() => setShowModal('news')}
+                className="bg-accent-primary hover:opacity-90 text-white px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2"
+              >
+                <span>➕</span><span>Добавить новость</span>
+              </button>
+            </div>
+            
+            {/* Фильтры */}
+            <div className="bg-secondary rounded-xl shadow p-4 border border-primary">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-secondary">📺 Канал:</label>
+                  <select 
+                    value={filterChannel}
+                    onChange={(e) => setFilterChannel(e.target.value)}
+                    className="w-full px-3 py-2 border border-primary rounded-lg bg-primary text-secondary focus:outline-none focus:border-accent-primary"
+                  >
+                    <option value="all" className="bg-primary">Все каналы</option>
+                    {channels.map((channel: any) => (
+                      <option key={channel.id} value={channel.id} className="bg-primary">{channel.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-secondary">👤 Автор:</label>
+                  <select 
+                    value={filterAuthor}
+                    onChange={(e) => setFilterAuthor(e.target.value)}
+                    className="w-full px-3 py-2 border border-primary rounded-lg bg-primary text-secondary focus:outline-none focus:border-accent-primary"
+                  >
+                    <option value="all" className="bg-primary">Все авторы</option>
+                    {users.map((user: any) => (
+                      <option key={user.id} value={user.id} className="bg-primary">{user.full_name || user.username}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-secondary">📋 Статус:</label>
+                  <select 
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full px-3 py-2 border border-primary rounded-lg bg-primary text-secondary focus:outline-none focus:border-accent-primary"
+                  >
+                    <option value="all" className="bg-primary">Все статусы</option>
+                    <option value="published" className="bg-primary">✅ Опубликовано</option>
+                    <option value="draft" className="bg-primary">✏️ Черновик</option>
+                  </select>
+                </div>
+              </div>
+              {(filterChannel !== 'all' || filterAuthor !== 'all' || filterStatus !== 'all') && (
+                <button
+                  onClick={() => {
+                    setFilterChannel('all')
+                    setFilterAuthor('all')
+                    setFilterStatus('all')
+                  }}
+                  className="mt-3 text-sm text-accent-primary hover:text-accent-primary/80"
+                >
+                  🔄 Сбросить фильтры
+                </button>
+              )}
+            </div>
+            
+            <div className="grid gap-4">
+              {getFilteredNews().length === 0 ? (
+                <p className="text-secondary text-center py-8">Новостей нет</p>
+              ) : (
+                getFilteredNews().map((item: any) => {
+                  // Get first image from media array
+                  const thumbnail = item.media && item.media.length > 0 && item.media[0].type === 'image' 
+                    ? item.media[0].url 
+                    : null;
+                  
+                  return (
+                    <div key={item.id} className="bg-secondary rounded-xl shadow p-4 flex gap-4 border border-primary">
+                      {/* Thumbnail */}
+                      <div className="flex-shrink-0">
+                        {thumbnail ? (
+                          <img 
+                            src={thumbnail} 
+                            alt={item.title}
+                            className="w-32 h-32 object-cover rounded-lg"
+                          />
+                        ) : (
+                          <div className="w-32 h-32 bg-tertiary rounded-lg flex items-center justify-center text-4xl">
+                            📰
+                          </div>
+                        )}
+                        {/* Action buttons under image */}
+                        <div className="flex gap-2 mt-2 justify-center">
+                          <button 
+                            onClick={() => {
+                              setEditingNews(item)
+                              setShowModal('edit-news')
+                            }} 
+                            className="text-accent-primary hover:text-accent-primary/80 p-1.5 hover-bg-tertiary rounded transition-all text-sm"
+                            title="Редактировать"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              if (confirm(`Переместить новость "${item.title}" в черновики?`)) {
+                                setLoading(true)
+                                try {
+                                  const response = await fetch('/api/news/update', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      id: item.id,
+                                      status: 'draft'
+                                    })
+                                  })
+                                  const result = await response.json()
+                                  if (response.ok) {
+                                    alert('✅ Новость перемещена в черновики')
+                                    await loadNews()
+                                  } else {
+                                    alert('❌ Ошибка: ' + result.error)
+                                  }
+                                } catch (error) {
+                                  console.error('Soft delete error:', error)
+                                  alert('❌ Ошибка при перемещении в черновики')
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }
+                            }} 
+                            className="text-accent-danger hover:text-red-500 p-1.5 hover-bg-tertiary rounded transition-all text-sm" 
+                            title="Переместить в черновики"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            item.status === 'published' ? 'badge-success' :
+                            item.status === 'draft' ? 'badge-warning' :
+                            'badge-gray'
+                          }`}>
+                            {item.status === 'published' ? '✅ Опубликовано' :
+                             item.status === 'draft' ? '✏️ Черновик' : item.status}
+                          </span>
+                          <div className="flex gap-1 flex-wrap">
+                            {item.all_channels && item.all_channels.length > 0 ? (
+                              item.all_channels.map((ch: any) => (
+                                <span key={ch.id} className="text-xs badge-blue px-2 py-1 rounded">
+                                  📺 {ch.name}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-secondary">📺 Нет каналов</span>
+                            )}
+                          </div>
+                        </div>
+                        <h3 className="text-xl font-bold text-primary mb-2 truncate">
+                          {item.title}
+                        </h3>
+                        <p className="text-secondary text-sm mb-3 line-clamp-2">
+                          {item.excerpt || item.content?.replace(/<[^>]*>/g, '').substring(0, 200) + '...'}
+                        </p>
+                        <div className="flex items-center space-x-4 text-sm text-secondary">
+                          <span>👤 {item.user_profiles?.full_name || item.user_profiles?.username || 'Неизвестно'}</span>
+                          <span>📅 {new Date(item.created_at).toLocaleDateString('ru-RU')}</span>
+                          {item.published_at && (
+                            <span>🚀 Опубликован {new Date(item.published_at).toLocaleDateString('ru-RU')}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Channels Tab */}
+        {activeTab === 'channels' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">📺 Каналы</h2>
+              <button
+                onClick={() => setShowModal('channel')}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2"
+              >
+                <span>➕</span><span>Добавить канал</span>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {channels.length === 0 ? (
+                <p className="text-gray-500 text-center py-8 col-span-full">Каналов пока нет</p>
+              ) : (
+                channels.map((channel: any) => (
+                  <div key={channel.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white text-xl">📺</div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 dark:text-white">{channel.name}</h3>
+                        <p className="text-sm text-gray-500">@{channel.slug}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{channel.description || 'Нет описания'}</p>
+                    <a href={channel.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
+                      🔗 {channel.url}
+                    </a>
+                    <div className="mt-4 flex justify-between items-center">
+                      <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
+                        Активен
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(channel.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Users Tab */}
+        {activeTab === 'users' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">👥 Пользователи</h2>
+              {payload.role === 'super_admin' && (
+                <button
+                  onClick={() => setShowModal('user')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-all flex items-center space-x-2"
+                >
+                  <span>➕</span><span>Добавить пользователя</span>
+                </button>
+              )}
+            </div>
+            
+            <div className="grid gap-4">
+              {users.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Пользователей пока нет</p>
+              ) : (
+                users.map((user: any) => (
+                  <div key={user.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex justify-between items-center">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                        {user.full_name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || '👤'}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 dark:text-white">{user.full_name || user.username}</h3>
+                        <p className="text-sm text-gray-500">@{user.username} • {user.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        user.role === 'super_admin' ? 'bg-purple-100 text-purple-800' :
+                        user.role === 'admin' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {user.role === 'super_admin' ? '👑 Супер-админ' : user.role === 'admin' ? '⭐ Админ' : '✏️ Редактор'}
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        {payload.role === 'super_admin' && (
+                          <button
+                            onClick={() => {
+                              setEditingUser(user)
+                              setShowModal('edit-user')
+                            }}
+                            className="text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            ✏️
+                          </button>
+                        )}
+                        <span className="text-sm text-gray-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">📊 Аналитика</h2>
+            
+            {/* Статистика по каналам */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">📺 Новости по каналам</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {channels.map((channel: any) => (
+                  <div key={channel.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-lg">{channel.name}</h4>
+                      <span className="text-2xl">📺</span>
+                    </div>
+                    <p className="text-3xl font-bold text-blue-600 mb-2">
+                      {getNewsCountByChannel(channel.id)}
+                    </p>
+                    <p className="text-sm text-gray-500">новостей</p>
+                    <button
+                      onClick={() => {
+                        setFilterChannel(channel.id)
+                        setActiveTab('news')
+                      }}
+                      className="mt-3 w-full py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 transition-all"
+                    >
+                      👉 Показать новости
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Статистика по авторам */}
+            <div>
+              <h3 className="text-xl font-bold mb-4">✍️ Новости по авторам</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {users.map((user: any) => (
+                  <div key={user.id} className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+                        {user.full_name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || '👤'}
+                      </div>
+                      <div>
+                        <h4 className="font-bold">{user.full_name || user.username}</h4>
+                        <p className="text-xs text-gray-500">@{user.username}</p>
+                      </div>
+                    </div>
+                    <p className="text-3xl font-bold text-purple-600 mb-2">
+                      {getNewsCountByAuthor(user.id)}
+                    </p>
+                    <p className="text-sm text-gray-500">новостей</p>
+                    <button
+                      onClick={() => {
+                        setFilterAuthor(user.id)
+                        setActiveTab('news')
+                      }}
+                      className="mt-3 w-full py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-100 transition-all"
+                    >
+                      👉 Показать новости
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Общая статистика */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                <p className="text-sm opacity-80">Всего новостей</p>
+                <p className="text-4xl font-bold mt-2">{news.length}</p>
+              </div>
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                <p className="text-sm opacity-80">Опубликовано</p>
+                <p className="text-4xl font-bold mt-2">
+                  {news.filter(n => n.status === 'published').length}
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
+                <p className="text-sm opacity-80">Черновики</p>
+                <p className="text-4xl font-bold mt-2">
+                  {news.filter(n => n.status === 'draft').length}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Modals */}
+      {showModal === 'news' && (
+        <Modal title="📰 Создать новость" onClose={() => setShowModal(null)}>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            
+            // Sync content from Quill editor
+            if (quillCreate.current) {
+              const html = quillCreate.current.root.innerHTML
+              
+              // If HTML is just plain text (no tags), wrap in paragraphs
+              const hasHtmlTags = /<[a-z][\s\S]*>/i.test(html)
+              let finalContent = html
+              
+              if (!hasHtmlTags && html.trim()) {
+                // Plain text - split by double newlines and wrap each paragraph
+                const paragraphs = html.split('\n\n').filter((p: string) => p.trim())
+                finalContent = paragraphs.map((p: string) => '<p>' + p.trim() + '</p>').join('')
+              }
+              
+              const textField = document.getElementById('create-content-field')
+              if (textField) {
+                textField.setAttribute('value', finalContent)
+              }
+            }
+            
+            const fd = new FormData(e.currentTarget)
+            // Собираем выбранные каналы
+            const selectedChannels = Array.from(e.currentTarget.querySelectorAll('input[name="channel_ids"]:checked')).map((cb: any) => cb.value)
+            // Добавляем channel_ids к formData
+            fd.set('channel_ids', JSON.stringify(selectedChannels))
+            handleSubmit('/api/news/create', fd, () => {})
+          }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Заголовок</label>
+              <input type="text" name="title" required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all placeholder-secondary" placeholder="Введите заголовок" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Краткое описание (excerpt)</label>
+              <textarea 
+                name="excerpt" 
+                rows={2} 
+                className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all resize-none placeholder-secondary" 
+                placeholder="Краткая выжимка из новости (2-3 предложения). Используется для SEO и превью." 
+                maxLength={300}
+              />
+              <p className="text-xs text-secondary mt-1">Максимум 300 символов. Будет использоваться в meta description и для превью.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Текст новости</label>
+              {/* Fixed Toolbar - Always visible */}
+              <div className="sticky top-0 z-50 bg-secondary border border-b-0 border-primary rounded-t-lg">
+                <div id="create-toolbar" className="ql-toolbar ql-snow">
+                  <span className="ql-formats">
+                    <select className="ql-header"></select>
+                    <select className="ql-font"></select>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-bold"></button>
+                    <button className="ql-italic"></button>
+                    <button className="ql-underline"></button>
+                    <button className="ql-strike"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-list" value="ordered"></button>
+                    <button className="ql-list" value="bullet"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-link"></button>
+                    <button className="ql-image"></button>
+                    <button className="ql-video"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-clean"></button>
+                  </span>
+                </div>
+              </div>
+              <div ref={createEditorRef} className="border border-primary rounded-b-lg bg-secondary min-h-[400px] max-h-[600px] overflow-y-auto" />
+              <input type="hidden" name="content" id="create-content-field" />
+              <p className="text-xs text-secondary mt-2">💡 Совет: Используйте заголовки H2, H3 для структуры. Toolbar всегда виден при прокрутке.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-secondary">📷 Медиа</label>
+              <div className="border border-primary rounded-lg p-4 space-y-3 bg-secondary">
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-secondary">Загрузить картинку</label>
+                  <input 
+                    type="file" 
+                    name="media_image" 
+                    accept="image/*"
+                    className="w-full text-sm text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent-primary/10 file:text-accent-primary hover:file:bg-accent-primary/20"
+                  />
+                  <p className="text-xs text-secondary">Картинка загрузится в Supabase Storage</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-secondary">🎥 Ссылка на видео</label>
+                  <input 
+                    type="url" 
+                    name="media_video" 
+                    placeholder="https://youtube.com/watch?v=... или https://rutube.ru/video/..."
+                    className="w-full px-3 py-2 border border-primary rounded-lg text-sm bg-primary text-secondary placeholder-secondary"
+                  />
+                  <p className="text-xs text-secondary">YouTube, RuTube, VK Видео</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-secondary">Каналы</label>
+              <div className="border border-primary rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto bg-secondary">
+                {channels.length === 0 ? (
+                  <p className="text-secondary text-sm">Каналов нет</p>
+                ) : (
+                  channels.map((channel: any) => (
+                    <label key={channel.id} className="flex items-center space-x-3 cursor-pointer p-2 hover-bg-tertiary rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        name="channel_ids"
+                        value={channel.id}
+                        className="w-4 h-4 rounded accent-accent-primary focus:ring-accent-primary border-primary"
+                      />
+                      <span className="text-sm text-primary font-medium">{channel.name}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Статус</label>
+              <select name="status" defaultValue="draft" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all">
+                <option value="draft" className="bg-primary">✏️ Черновик</option>
+                <option value="published" className="bg-primary">✅ Опубликовано</option>
+              </select>
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-accent-primary hover:opacity-90 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+              {loading ? '⏳ Создание...' : '✅ Создать новость'}
+            </button>
+          </form>
+        </Modal>
+      )}
+      {showModal === 'edit-news' && editingNews && (
+        <Modal title="✏️ Редактировать новость" onClose={() => {
+          setShowModal(null)
+          setEditingNews(null)
+        }}>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            console.log('🚀 Starting edit form submission...')
+            
+            // Sync content from Quill editor
+            if (quillEdit.current) {
+              const html = quillEdit.current.root.innerHTML
+              
+              // If HTML is just plain text (no tags), wrap in paragraphs
+              const hasHtmlTags = /<[a-z][\s\S]*>/i.test(html)
+              let finalContent = html
+              
+              if (!hasHtmlTags && html.trim()) {
+                // Plain text - split by double newlines and wrap each paragraph
+                const paragraphs = html.split('\n\n').filter((p: string) => p.trim())
+                finalContent = paragraphs.map((p: string) => '<p>' + p.trim() + '</p>').join('')
+              }
+              
+              const textField = document.getElementById('edit-content-field')
+              if (textField) {
+                textField.setAttribute('value', finalContent)
+              }
+            }
+            
+            const fd = new FormData(e.currentTarget)
+            console.log('📦 Raw FormData from form:')
+            for (let [key, value] of fd.entries()) {
+              if (value instanceof File) {
+                console.log(`  ${key}: File(${value.name}, ${value.size} bytes)`)
+              } else {
+                console.log(`  ${key}: ${String(value).substring(0, 100)}`)
+              }
+            }
+            
+            const selectedChannels = Array.from(e.currentTarget.querySelectorAll('input[name="channel_ids"]:checked')).map((cb: any) => cb.value)
+            console.log('✅ Selected channels:', selectedChannels)
+            
+            // Создаем FormData для отправки
+            const submitData = new FormData()
+            submitData.append('id', editingNews.id)
+            submitData.append('title', fd.get('title') as string)
+            submitData.append('excerpt', fd.get('excerpt') as string || '')
+            submitData.append('content', fd.get('content') as string)
+            submitData.append('status', fd.get('status') as string)
+            
+            const channelIdsJson = JSON.stringify(selectedChannels)
+            submitData.append('channel_ids', channelIdsJson)
+            console.log('📺 Channel IDs JSON:', channelIdsJson)
+            
+            if (fd.get('update_created_at')) {
+              submitData.append('update_created_at', 'on')
+            }
+            
+            // Картинка и видео
+            const mediaImage = fd.get('media_image') as File
+            const mediaVideo = fd.get('media_video') as string
+            
+            if (mediaImage && mediaImage.size > 0) {
+              submitData.append('media_image', mediaImage)
+              console.log('📷 Image file:', mediaImage.name, mediaImage.type, mediaImage.size, 'bytes')
+            } else {
+              console.log('📷 No image file selected')
+            }
+            
+            if (mediaVideo) {
+              submitData.append('media_video', mediaVideo)
+              console.log('🎥 Video URL:', mediaVideo)
+            }
+            
+            console.log('📦 Final FormData prepared')
+            console.log('🚀 Calling handleSubmit with FormData...')
+            
+            handleSubmit('/api/news/update', submitData, () => {
+              console.log('✅ Success callback called')
+            })
+          }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Заголовок</label>
+              <input type="text" name="title" defaultValue={editingNews.title} required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Краткое описание (excerpt)</label>
+              <textarea 
+                name="excerpt" 
+                rows={2} 
+                defaultValue={editingNews.excerpt || ''}
+                className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all resize-none placeholder-secondary" 
+                placeholder="Краткая выжимка из новости (2-3 предложения)" 
+                maxLength={300}
+              />
+              <p className="text-xs text-secondary mt-1">Максимум 300 символов</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Текст новости</label>
+              {/* Fixed Toolbar - Always visible */}
+              <div className="sticky top-0 z-50 bg-secondary border border-b-0 border-primary rounded-t-lg">
+                <div id="edit-toolbar" className="ql-toolbar ql-snow">
+                  <span className="ql-formats">
+                    <select className="ql-header"></select>
+                    <select className="ql-font"></select>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-bold"></button>
+                    <button className="ql-italic"></button>
+                    <button className="ql-underline"></button>
+                    <button className="ql-strike"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-list" value="ordered"></button>
+                    <button className="ql-list" value="bullet"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-link"></button>
+                    <button className="ql-image"></button>
+                    <button className="ql-video"></button>
+                  </span>
+                  <span className="ql-formats">
+                    <button className="ql-clean"></button>
+                  </span>
+                </div>
+              </div>
+              <div ref={editEditorRef} className="border border-primary rounded-b-lg bg-secondary min-h-[400px] max-h-[600px] overflow-y-auto" />
+              <input type="hidden" name="content" id="edit-content-field" />
+              <p className="text-xs text-secondary mt-2">💡 Совет: Toolbar зафиксирован и всегда виден при прокрутке текста.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-secondary">📷 Медиа (существующее)</label>
+              {editingNews.media && editingNews.media.length > 0 ? (
+                <div className="mb-3 space-y-2">
+                  {editingNews.media.map((m: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2 p-2 bg-tertiary rounded text-sm text-primary">
+                      {m.type === 'image' && <span>📷 Картинка</span>}
+                      {m.type === 'youtube' && <span>🎥 YouTube</span>}
+                      {m.type === 'rutube' && <span>🎥 RuTube</span>}
+                      {m.type === 'vk' && <span>🎥 VK Видео</span>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-secondary mb-3">Нет медиа</p>
+              )}
+              <div className="border border-primary rounded-lg p-4 space-y-3 bg-secondary">
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-secondary">Загрузить новую картинку</label>
+                  <input 
+                    type="file" 
+                    name="media_image" 
+                    accept="image/*"
+                    className="w-full text-sm text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent-primary/10 file:text-accent-primary hover:file:bg-accent-primary/20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-medium text-secondary">🎥 Ссылка на новое видео</label>
+                  <input 
+                    type="url" 
+                    name="media_video" 
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="w-full px-3 py-2 border border-primary rounded-lg text-sm bg-primary text-secondary placeholder-secondary"
+                  />
+                </div>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-secondary">Каналы</label>
+              <div className="border border-primary rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto bg-secondary">
+                {channels.length === 0 ? (
+                  <p className="text-secondary text-sm">Каналов нет</p>
+                ) : (
+                  channels.map((channel: any) => {
+                    // Проверяем есть ли этот канал в all_channels
+                    const isSelected = editingNews.all_channels?.some((ch: any) => ch.id === channel.id) ||
+                                      editingNews.channel_id === channel.id;
+                    return (
+                      <label key={`${editingNews.id}-${channel.id}`} className="flex items-center space-x-3 cursor-pointer p-2 hover-bg-tertiary rounded transition-colors">
+                        <input
+                          type="checkbox"
+                          name="channel_ids"
+                          value={channel.id}
+                          defaultChecked={isSelected}
+                          className="w-4 h-4 rounded accent-accent-primary focus:ring-accent-primary border-primary"
+                        />
+                        <span className="text-sm text-primary font-medium">{channel.name}</span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Статус</label>
+              <select name="status" defaultValue={editingNews.status} className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all">
+                <option value="draft" className="bg-primary">✏️ Черновик</option>
+                <option value="published" className="bg-primary">✅ Опубликовано</option>
+              </select>
+            </div>
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+              <label className="flex items-start space-x-3 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  name="update_created_at"
+                  className="w-5 h-5 rounded accent-accent-primary focus:ring-accent-primary border-primary mt-0.5"
+                />
+                <div>
+                  <span className="text-sm font-medium text-primary">📅 Обновить дату создания</span>
+                  <p className="text-xs text-secondary mt-1">
+                    Если отмечено, дата создания изменится на текущую (как будто новость создана сейчас). 
+                    Используйте для поднятия новости вверх ленты.
+                  </p>
+                </div>
+              </label>
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-accent-primary hover:opacity-90 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+              {loading ? '⏳ Сохранение...' : '💾 Сохранить изменения'}
+            </button>
+          </form>
+        </Modal>
+      )}
+      {showModal === 'channel' && (
+        <Modal title="📺 Создать канал" onClose={() => setShowModal(null)}>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const fd = new FormData(e.currentTarget)
+            handleSubmit('/api/channels/create', fd, () => {})
+          }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Название</label>
+              <input type="text" name="name" required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" placeholder="Введите название" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Ключ (slug)</label>
+              <input type="text" name="slug" required pattern="[a-z0-9-]+" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" placeholder="main-news" />
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
+              {loading ? '⏳ Создание...' : '✅ Создать канал'}
+            </button>
+          </form>
+        </Modal>
+      )}
+      {showModal === 'user' && payload.role === 'super_admin' && (
+        <Modal title="👤 Создать пользователя" onClose={() => setShowModal(null)}>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const fd = new FormData(e.currentTarget)
+            handleSubmit('/api/users/create', fd, () => {})
+          }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Логин</label>
+              <input type="text" name="username" required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Пароль</label>
+              <input type="password" name="password" required minLength={6} className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Имя</label>
+              <input type="text" name="full_name" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Роль</label>
+              <select name="role" defaultValue="editor" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all">
+                <option value="editor" className="bg-primary">Редактор</option>
+                <option value="admin" className="bg-primary">Админ</option>
+                <option value="super_admin" className="bg-primary">Супер-админ</option>
+              </select>
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium disabled:opacity-50">
+              {loading ? '⏳ Создание...' : '✅ Создать пользователя'}
+            </button>
+          </form>
+        </Modal>
+      )}
+      {showModal === 'edit-user' && editingUser && payload.role === 'super_admin' && (
+        <Modal title="✏️ Редактировать пользователя" onClose={() => {
+          setShowModal(null)
+          setEditingUser(null)
+        }}>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const fd = new FormData(e.currentTarget)
+            const data = {
+              userId: editingUser.id,
+              username: fd.get('username') as string,
+              full_name: fd.get('full_name') as string,
+              role: fd.get('role') as string,
+              password: fd.get('password') as string || undefined
+            }
+            handleSubmit('/api/users/update', data, () => {})
+          }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Логин</label>
+              <input type="text" name="username" defaultValue={editingUser.username} required className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Пароль</label>
+              <input type="password" name="password" placeholder="Оставьте пустым, чтобы не менять" className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Имя</label>
+              <input type="text" name="full_name" defaultValue={editingUser.full_name || ''} className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-secondary">Роль</label>
+              <select name="role" defaultValue={editingUser.role} className="w-full px-4 py-2.5 border border-primary rounded-lg bg-primary text-secondary focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all">
+                <option value="editor" className="bg-primary">Редактор</option>
+                <option value="admin" className="bg-primary">Админ</option>
+                <option value="super_admin" className="bg-primary">Супер-админ</option>
+              </select>
+            </div>
+            <button type="submit" disabled={loading} className="w-full bg-accent-primary hover:opacity-90 text-white py-3 rounded-lg font-medium disabled:opacity-50">
+              {loading ? '⏳ Сохранение...' : '💾 Сохранить изменения'}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {/* Error Modal */}
+      {errorModal.show && (
+        <Modal 
+          title="❌ Ошибка" 
+          onClose={() => setErrorModal({ show: false, message: '', details: '' })}
+        >
+          <div className="space-y-4">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+              <p className="text-accent-danger font-medium">{errorModal.message}</p>
+            </div>
+            
+            {errorModal.details && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  📋 Детали ошибки (скопируйте для отладки):
+                </label>
+                <textarea
+                  readOnly
+                  value={errorModal.details}
+                  className="w-full h-40 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 font-mono text-xs text-gray-800 dark:text-gray-200 focus:outline-none"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(errorModal.details || '')
+                    setSuccessModal({ show: true, message: '✅ Скопировано!' })
+                  }}
+                  className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+                >
+                  <span>📋</span><span>Копировать</span>
+                </button>
+              </div>
+            )}
+            
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={() => setErrorModal({ show: false, message: '', details: '' })}
+                className="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-all"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Success Modal */}
+      {successModal.show && (
+        <Modal 
+          title="✅ Успешно" 
+          onClose={() => setSuccessModal({ show: false, message: '' })}
+        >
+          <div className="py-4">
+            <p className="text-green-800 dark:text-green-200 text-center">{successModal.message}</p>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}

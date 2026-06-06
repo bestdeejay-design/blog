@@ -1,0 +1,236 @@
+<!-- NEWS MODAL FOR ARENTAL -->
+<!-- Вставить перед закрывающим </body> -->
+
+<style>
+  /* ===== NEWS MODAL STYLES ===== */
+  .news-modal-overlay-arental {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    display: none;
+    backdrop-filter: blur(8px);
+  }
+  
+  .news-modal-overlay-arental.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .news-modal-arental {
+    background: var(--card);
+    border-radius: var(--radius);
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+  }
+  
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .news-modal-close-arental {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid var(--border);
+    color: var(--ink);
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .news-modal-close-arental:hover {
+    background: var(--primary);
+    color: white;
+    transform: rotate(90deg);
+  }
+  
+  .news-modal-image-arental {
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  
+  .news-modal-content-arental {
+    padding: 30px;
+  }
+  
+  .news-modal-header-arental {
+    margin-bottom: 20px;
+  }
+  
+  .news-modal-title-arental {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 12px;
+    color: var(--ink);
+  }
+  
+  .news-modal-meta-arental {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  
+  .news-modal-channel-arental {
+    background: var(--primary-weak);
+    color: var(--primary);
+    padding: 6px 12px;
+    border-radius: 99px;
+    font-weight: 600;
+  }
+  
+  .news-modal-date-arental {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .news-modal-body-arental {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--ink);
+  }
+  
+  .news-modal-body-arental p {
+    margin-bottom: 16px;
+  }
+  
+  @media (max-width: 768px) {
+    .news-modal-arental {
+      width: 95%;
+      max-height: 95vh;
+    }
+    
+    .news-modal-content-arental {
+      padding: 20px;
+    }
+    
+    .news-modal-image-arental {
+      max-height: 300px;
+    }
+  }
+</style>
+
+<div id="news-modal-overlay-arental" class="news-modal-overlay-arental">
+  <div class="news-modal-arental">
+    <button class="news-modal-close-arental" onclick="closeNewsModal()">×</button>
+    <img id="news-modal-image-arental" class="news-modal-image-arental" src="" alt="" style="display:none;" />
+    <div class="news-modal-content-arental">
+      <div class="news-modal-header-arental">
+        <h2 id="news-modal-title-arental" class="news-modal-title-arental"></h2>
+        <div class="news-modal-meta-arental">
+          <span id="news-modal-channel-arental" class="news-modal-channel-arental"></span>
+          <span id="news-modal-date-arental" class="news-modal-date-arental"></span>
+        </div>
+      </div>
+      <div id="news-modal-body-arental" class="news-modal-body-arental"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.openNewsModal = function(news) {
+    const overlay = document.getElementById('news-modal-overlay-arental');
+    const imageEl = document.getElementById('news-modal-image-arental');
+    const titleEl = document.getElementById('news-modal-title-arental');
+    const channelEl = document.getElementById('news-modal-channel-arental');
+    const dateEl = document.getElementById('news-modal-date-arental');
+    const bodyEl = document.getElementById('news-modal-body-arental');
+    
+    // Заполняем данными
+    titleEl.textContent = news.title;
+    
+    const date = new Date(news.published_at).toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const channelName = news.channels?.name || 'Без канала';
+    channelEl.textContent = '📺 ' + channelName;
+    dateEl.textContent = '📅 ' + date;
+    
+    // Картинка
+    if (news.thumbnail) {
+      imageEl.src = escapeHtml(news.thumbnail);
+      imageEl.style.display = 'block';
+    } else {
+      imageEl.style.display = 'none';
+    }
+    
+    // Контент
+    bodyEl.innerHTML = formatNewsContent(news.content);
+    
+    // Показываем модалку
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+  
+  window.closeNewsModal = function() {
+    const overlay = document.getElementById('news-modal-overlay-arental');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  };
+  
+  function formatNewsContent(content) {
+    if (!content) return '';
+    
+    // Разбиваем на параграфы
+    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    
+    return paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+  }
+  
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+  
+  // Закрытие по клику вне модалки
+  document.getElementById('news-modal-overlay-arental').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeNewsModal();
+    }
+  });
+  
+  // Закрытие по ESC
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeNewsModal();
+    }
+  });
+</script>
